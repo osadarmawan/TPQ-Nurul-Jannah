@@ -15,7 +15,7 @@ import { WAGatewayManagement } from './components/WAGatewayManagement';
 import { DailyReportPrint } from './components/DailyReportPrint';
 import { LoginModal } from './components/LoginModal';
 import { UserRole, UserInfo } from './types';
-import { Bell, Search, UserCircle, FileText, BookOpen, LogIn } from 'lucide-react';
+import { Bell, Search, UserCircle, FileText, BookOpen, LogIn, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from './lib/utils';
 
@@ -80,6 +80,21 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center space-x-6">
+                        <a 
+                            href="https://profile-nurul-jannah.vercel.app" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={cn(
+                                "p-2.5 rounded-full transition-all group relative",
+                                theme === 'dark'
+                                    ? "text-gray-400 hover:text-emerald-400 hover:bg-emerald-900/20"
+                                    : "text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50"
+                            )}
+                            title="Buka Profil TPQ"
+                        >
+                            <Home size={22} />
+                        </a>
+
                         <div className="relative">
                             <button 
                                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
