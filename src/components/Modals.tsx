@@ -15,9 +15,41 @@ interface SantriModalProps {
     onClose: () => void;
     mode: 'add' | 'edit';
     initialData?: any;
+    onSubmit: (data: any) => void;
 }
 
-export const SantriModal: React.FC<SantriModalProps> = ({ isOpen, onClose, mode, initialData }) => {
+export const SantriModal: React.FC<SantriModalProps> = ({ isOpen, onClose, mode, initialData, onSubmit }) => {
+    const [formData, setFormData] = React.useState<any>({
+        nama: '',
+        nis: '',
+        jilid: '1',
+        ortu: '',
+        whatsapp: '',
+        gender: 'Laki-laki',
+        status: 'Siswa'
+    });
+
+    React.useEffect(() => {
+        if (initialData) {
+            setFormData(initialData);
+        } else {
+            setFormData({
+                nama: '',
+                nis: '',
+                jilid: '1',
+                ortu: '',
+                whatsapp: '',
+                gender: 'Laki-laki',
+                status: 'Siswa'
+            });
+        }
+    }, [initialData]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -29,108 +61,152 @@ export const SantriModal: React.FC<SantriModalProps> = ({ isOpen, onClose, mode,
                         onClick={onClose}
                         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                     />
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#D4AF37]/20"
+                    <form 
+                        onSubmit={handleSubmit}
+                        className="contents"
                     >
-                        {/* Header */}
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-white">
-                            <div>
-                                <h3 className="text-xl font-bold text-[#064E3B]">
-                                    {mode === 'add' ? 'Tambah Santri Baru' : 'Edit Data Santri'}
-                                </h3>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    {mode === 'add' ? 'Lengkapi formulir untuk mendaftarkan santri baru.' : 'Perbarui informasi santri dengan teliti.'}
-                                </p>
-                            </div>
-                            <button onClick={onClose} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Form Body */}
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                        <User size={14} className="mr-1.5 text-[#D4AF37]" /> Nama Lengkap
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        defaultValue={initialData?.nama}
-                                        placeholder="Masukkan nama lengkap santri"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
-                                    />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#D4AF37]/20"
+                        >
+                            {/* Header */}
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-white">
+                                <div>
+                                    <h3 className="text-xl font-bold text-[#064E3B]">
+                                        {mode === 'add' ? 'Tambah Santri Baru' : 'Edit Data Santri'}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {mode === 'add' ? 'Lengkapi formulir untuk mendaftarkan santri baru.' : 'Perbarui informasi santri dengan teliti.'}
+                                    </p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <button type="button" onClick={onClose} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Form Body */}
+                            <div className="p-6 space-y-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                            <Hash size={14} className="mr-1.5 text-[#D4AF37]" /> NIS
+                                            <User size={14} className="mr-1.5 text-[#D4AF37]" /> Nama Lengkap
                                         </label>
                                         <input 
                                             type="text" 
-                                            defaultValue={initialData?.nis}
-                                            placeholder="2024xxx"
+                                            value={formData.nama}
+                                            onChange={(e) => setFormData({...formData, nama: e.target.value})}
+                                            placeholder="Masukkan nama lengkap santri"
+                                            required
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
                                         />
                                     </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Hash size={14} className="mr-1.5 text-[#D4AF37]" /> NIS
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                value={formData.nis}
+                                                onChange={(e) => setFormData({...formData, nis: e.target.value})}
+                                                placeholder="2024xxx"
+                                                required
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <BookOpen size={14} className="mr-1.5 text-[#D4AF37]" /> Jilid
+                                            </label>
+                                            <select 
+                                                value={formData.jilid}
+                                                onChange={(e) => setFormData({...formData, jilid: e.target.value})}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all bg-white"
+                                            >
+                                                {[1,2,3,4,5,6].map(j => <option key={j} value={j}>Jilid {j}</option>)}
+                                                <option value="Al-Quran">Al-Quran</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                            <BookOpen size={14} className="mr-1.5 text-[#D4AF37]" /> Jilid
+                                            <Users size={14} className="mr-1.5 text-[#D4AF37]" /> Nama Orang Tua / Wali
                                         </label>
-                                        <select 
-                                            defaultValue={initialData?.jilid || 1}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all bg-white"
-                                        >
-                                            {[1,2,3,4,5,6].map(j => <option key={j} value={j}>Jilid {j}</option>)}
-                                            <option value="Al-Quran">Al-Quran</option>
-                                        </select>
+                                        <input 
+                                            type="text" 
+                                            value={formData.ortu}
+                                            onChange={(e) => setFormData({...formData, ortu: e.target.value})}
+                                            placeholder="Nama ayah atau ibu"
+                                            required
+                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <UserCircle size={14} className="mr-1.5 text-[#D4AF37]" /> Gender
+                                            </label>
+                                            <select 
+                                                value={formData.gender}
+                                                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all bg-white"
+                                            >
+                                                <option value="Laki-laki">Laki-laki</option>
+                                                <option value="Perempuan">Perempuan</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <AlertTriangle size={14} className="mr-1.5 text-[#D4AF37]" /> Status
+                                            </label>
+                                            <select 
+                                                value={formData.status}
+                                                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all bg-white"
+                                            >
+                                                <option value="Siswa">Siswa Aktif</option>
+                                                <option value="Calon">Calon Santri</option>
+                                                <option value="Lulus">Lulus</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                            <Phone size={14} className="mr-1.5 text-[#D4AF37]" /> Nomor WhatsApp
+                                        </label>
+                                        <input 
+                                            type="tel" 
+                                            value={formData.whatsapp}
+                                            onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                                            placeholder="Contoh: 081234567890"
+                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-1">Gunakan format angka, contoh: 0812...</p>
                                     </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                        <Users size={14} className="mr-1.5 text-[#D4AF37]" /> Nama Orang Tua / Wali
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        defaultValue={initialData?.ortu}
-                                        placeholder="Nama ayah atau ibu"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                        <Phone size={14} className="mr-1.5 text-[#D4AF37]" /> Nomor WhatsApp
-                                    </label>
-                                    <input 
-                                        type="tel" 
-                                        defaultValue={initialData?.whatsapp || ''}
-                                        placeholder="Contoh: 081234567890"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
-                                    />
-                                    <p className="text-[10px] text-gray-400 mt-1">Gunakan format angka, contoh: 0812...</p>
-                                </div>
                             </div>
-                        </div>
 
-                        {/* Footer */}
-                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end space-x-3">
-                            <button 
-                                onClick={onClose}
-                                className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                                Batal
-                            </button>
-                            <button 
-                                className="px-6 py-2.5 bg-[#064E3B] text-white rounded-xl font-medium flex items-center shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 transition-all transform hover:-translate-y-0.5"
-                            >
-                                <Save size={18} className="mr-2" />
-                                {mode === 'add' ? 'Simpan Data' : 'Perbarui Data'}
-                            </button>
-                        </div>
-                    </motion.div>
+                            {/* Footer */}
+                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end space-x-3">
+                                <button 
+                                    type="button"
+                                    onClick={onClose}
+                                    className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="px-6 py-2.5 bg-[#064E3B] text-white rounded-xl font-medium flex items-center shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 transition-all transform hover:-translate-y-0.5"
+                                >
+                                    <Save size={18} className="mr-2" />
+                                    {mode === 'add' ? 'Simpan Data' : 'Perbarui Data'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </form>
                 </div>
             )}
         </AnimatePresence>
@@ -438,9 +514,41 @@ interface StaffModalProps {
     onClose: () => void;
     mode: 'add' | 'edit';
     initialData?: any;
+    onSubmit: (data: any) => void;
 }
 
-export const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, mode, initialData }) => {
+export const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, mode, initialData, onSubmit }) => {
+    const [formData, setFormData] = React.useState<any>({
+        nama: '',
+        nip: '',
+        role: 'Pengajar Jilid 1-6',
+        status: 'Aktif',
+        email: '',
+        phone: '',
+        salary: ''
+    });
+
+    React.useEffect(() => {
+        if (initialData) {
+            setFormData(initialData);
+        } else {
+            setFormData({
+                nama: '',
+                nip: '',
+                role: 'Pengajar Jilid 1-6',
+                status: 'Aktif',
+                email: '',
+                phone: '',
+                salary: ''
+            });
+        }
+    }, [initialData]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -452,113 +560,139 @@ export const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, mode, i
                         onClick={onClose}
                         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                     />
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#D4AF37]/20"
-                    >
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
-                            <div>
-                                <h3 className="text-xl font-bold text-blue-900">
-                                    {mode === 'add' ? 'Tambah Pegawai Baru' : 'Edit Data Pegawai'}
-                                </h3>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    {mode === 'add' ? 'Lengkapi data ustadz atau staf administrasi.' : 'Perbarui informasi kepegawaian.'}
-                                </p>
-                            </div>
-                            <button onClick={onClose} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                        <User size={14} className="mr-1.5 text-blue-500" /> Nama Lengkap
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        defaultValue={initialData?.nama}
-                                        placeholder="Contoh: Ustadz Ahmad"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-                                    />
+                    <form onSubmit={handleSubmit} className="contents">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#D4AF37]/20"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
+                                <div>
+                                    <h3 className="text-xl font-bold text-blue-900">
+                                        {mode === 'add' ? 'Tambah Pegawai Baru' : 'Edit Data Pegawai'}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {mode === 'add' ? 'Lengkapi data ustadz atau staf administrasi.' : 'Perbarui informasi kepegawaian.'}
+                                    </p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <button type="button" onClick={onClose} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                            <Hash size={14} className="mr-1.5 text-blue-500" /> NIP / ID
+                                            <User size={14} className="mr-1.5 text-blue-500" /> Nama Lengkap
                                         </label>
                                         <input 
                                             type="text" 
-                                            defaultValue={initialData?.nip}
-                                            placeholder="TPQ-xxx"
+                                            value={formData.nama}
+                                            onChange={(e) => setFormData({...formData, nama: e.target.value})}
+                                            placeholder="Contoh: Ustadz Ahmad"
+                                            required
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                            <Save size={14} className="mr-1.5 text-blue-500" /> Jabatan
-                                        </label>
-                                        <select 
-                                            defaultValue={initialData?.role}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all bg-white"
-                                        >
-                                            <option value="Kepala TPQ">Kepala TPQ</option>
-                                            <option value="Pengajar Al-Quran">Pengajar Al-Quran</option>
-                                            <option value="Pengajar Jilid 1-6">Pengajar Jilid 1-6</option>
-                                            <option value="Administrasi">Administrasi</option>
-                                            <option value="Kebersihan">Kebersihan</option>
-                                        </select>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Hash size={14} className="mr-1.5 text-blue-500" /> NIP / ID
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                value={formData.nip}
+                                                onChange={(e) => setFormData({...formData, nip: e.target.value})}
+                                                placeholder="TPQ-xxx"
+                                                required
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Save size={14} className="mr-1.5 text-blue-500" /> Jabatan
+                                            </label>
+                                            <select 
+                                                value={formData.role}
+                                                onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all bg-white"
+                                            >
+                                                <option value="Kepala TPQ">Kepala TPQ</option>
+                                                <option value="Pengajar Al-Quran">Pengajar Al-Quran</option>
+                                                <option value="Pengajar Jilid 1-6">Pengajar Jilid 1-6</option>
+                                                <option value="Administrasi">Administrasi</option>
+                                                <option value="Kebersihan">Kebersihan</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                            <Save size={14} className="mr-1.5 text-blue-500" /> Email
-                                        </label>
-                                        <input 
-                                            type="email" 
-                                            defaultValue={initialData?.email}
-                                            placeholder="email@tpq.com"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Mail size={14} className="mr-1.5 text-blue-500" /> Email
+                                            </label>
+                                            <input 
+                                                type="email" 
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                                placeholder="email@tpq.com"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Phone size={14} className="mr-1.5 text-blue-500" /> No. Telepon
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                                placeholder="0812xxx"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                            <Save size={14} className="mr-1.5 text-blue-500" /> No. Telepon
-                                        </label>
-                                        <input 
-                                            type="text" 
-                                            defaultValue={initialData?.phone}
-                                            placeholder="0812xxx"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Save size={14} className="mr-1.5 text-blue-500" /> Gaji Pokok (Rp)
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                value={formData.salary}
+                                                onChange={(e) => setFormData({...formData, salary: e.target.value})}
+                                                placeholder="Contoh: 2500000"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                                <Save size={14} className="mr-1.5 text-blue-500" /> Status
+                                            </label>
+                                            <select 
+                                                value={formData.status}
+                                                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all bg-white"
+                                            >
+                                                <option value="Aktif">Aktif</option>
+                                                <option value="Cuti">Cuti</option>
+                                                <option value="Resign">Resign</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
-                                        <Save size={14} className="mr-1.5 text-blue-500" /> Gaji Pokok (Rp)
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        defaultValue={initialData?.salary}
-                                        placeholder="Contoh: 2.500.000"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-                                    />
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end space-x-3">
-                            <button onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">Batal</button>
-                            <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium flex items-center shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 transition-all transform hover:-translate-y-0.5">
-                                <Save size={18} className="mr-2" />
-                                {mode === 'add' ? 'Simpan Pegawai' : 'Perbarui Pegawai'}
-                            </button>
-                        </div>
-                    </motion.div>
+                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end space-x-3">
+                                <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">Batal</button>
+                                <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium flex items-center shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 transition-all transform hover:-translate-y-0.5">
+                                    <Save size={18} className="mr-2" />
+                                    {mode === 'add' ? 'Simpan Pegawai' : 'Perbarui Pegawai'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </form>
                 </div>
             )}
         </AnimatePresence>
@@ -838,6 +972,254 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, onClose, onC
                                 Batalkan
                             </button>
                         </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// --- FINANCE MODAL ---
+export const FinanceModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: any) => void;
+    initialData?: any;
+    mode: 'add' | 'edit';
+}> = ({ isOpen, onClose, onSubmit, initialData, mode }) => {
+    const [formData, setFormData] = React.useState({
+        tanggal: new Date().toISOString().split('T')[0],
+        deskripsi: '',
+        kategori: 'Pemasukan',
+        tipe: 'Pemasukan',
+        jumlah: 0,
+        metode: 'Tunai'
+    });
+
+    React.useEffect(() => {
+        if (initialData) setFormData(initialData);
+    }, [initialData]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                    <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-100">
+                        <form onSubmit={handleSubmit}>
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-emerald-50">
+                                <h3 className="text-xl font-bold text-emerald-900">{mode === 'add' ? 'Catat Transaksi Baru' : 'Edit Transaksi'}</h3>
+                                <button type="button" onClick={onClose} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Deskripsi</label>
+                                    <input type="text" value={formData.deskripsi} onChange={e => setFormData({...formData, deskripsi: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none" required />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Tipe</label>
+                                        <select value={formData.tipe} onChange={e => setFormData({...formData, tipe: e.target.value as any, kategori: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none">
+                                            <option value="Pemasukan">Pemasukan</option>
+                                            <option value="Pengeluaran">Pengeluaran</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Jumlah</label>
+                                        <input type="number" value={formData.jumlah} onChange={e => setFormData({...formData, jumlah: Number(e.target.value)})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none" required />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Tanggal</label>
+                                    <input type="date" value={formData.tanggal} onChange={e => setFormData({...formData, tanggal: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none" required />
+                                </div>
+                            </div>
+                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
+                                <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-600">Batal</button>
+                                <button type="submit" className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold shadow-lg">Simpan</button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// --- ACADEMIC MODAL ---
+export const AcademicModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: any) => void;
+    initialData?: any;
+    mode: 'add' | 'edit';
+}> = ({ isOpen, onClose, onSubmit, initialData, mode }) => {
+    const [formData, setFormData] = React.useState({
+        nama: '',
+        jilid: 'Jilid 1',
+        materi: '',
+        nilai: 'A',
+        ustadz: '',
+        tanggal: new Date().toISOString().split('T')[0]
+    });
+
+    React.useEffect(() => {
+        if (initialData) setFormData(initialData);
+    }, [initialData]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                    <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+                        <form onSubmit={handleSubmit}>
+                            <div className="p-6 border-b border-gray-100 bg-blue-50">
+                                <h3 className="text-xl font-bold text-blue-900">{mode === 'add' ? 'Input Nilai Baru' : 'Edit Nilai'}</h3>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Nama Santri</label>
+                                    <input type="text" value={formData.nama} onChange={e => setFormData({...formData, nama: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Jilid</label>
+                                        <select value={formData.jilid} onChange={e => setFormData({...formData, jilid: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200">
+                                            {[1,2,3,4,5,6].map(j => <option key={j} value={`Jilid ${j}`}>Jilid {j}</option>)}
+                                            <option value="Al-Quran">Al-Quran</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Nilai</label>
+                                        <select value={formData.nilai} onChange={e => setFormData({...formData, nilai: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200">
+                                            {['A', 'A-', 'B+', 'B', 'B-', 'C'].map(n => <option key={n} value={n}>{n}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Materi</label>
+                                    <input type="text" value={formData.materi} onChange={e => setFormData({...formData, materi: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Ustadz/ah</label>
+                                    <input type="text" value={formData.ustadz} onChange={e => setFormData({...formData, ustadz: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                </div>
+                            </div>
+                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
+                                <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-600">Batal</button>
+                                <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg">Simpan Nilai</button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// --- DEVELOPMENT MODAL ---
+export const DevelopmentModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: any) => void;
+    initialData?: any;
+    mode: 'add' | 'edit';
+}> = ({ isOpen, onClose, onSubmit, initialData, mode }) => {
+    const [formData, setFormData] = React.useState({
+        name: '',
+        status: 'In Progress',
+        progress: 0,
+        budget: 0,
+        spent: 0,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        contractor: '',
+        priority: 'Medium'
+    });
+
+    React.useEffect(() => {
+        if (initialData) setFormData(initialData);
+    }, [initialData]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                    <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-100">
+                        <form onSubmit={handleSubmit}>
+                            <div className="p-6 border-b border-gray-100 bg-amber-50">
+                                <h3 className="text-xl font-bold text-amber-900">{mode === 'add' ? 'Tambah Proyek Pembangunan' : 'Edit Proyek'}</h3>
+                            </div>
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Nama Proyek</label>
+                                    <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Status</label>
+                                        <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200">
+                                            <option value="Planning">Planning</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Completed">Completed</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Prioritas</label>
+                                        <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200">
+                                            <option value="High">High</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="Low">Low</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Anggaran (Rp)</label>
+                                        <input type="number" value={formData.budget} onChange={e => setFormData({...formData, budget: Number(e.target.value)})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Progress (%)</label>
+                                        <input type="number" min="0" max="100" value={formData.progress} onChange={e => setFormData({...formData, progress: Number(e.target.value)})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase">Pelaksana</label>
+                                    <input type="text" value={formData.contractor} onChange={e => setFormData({...formData, contractor: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Tgl Mulai</label>
+                                        <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" required />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-600 uppercase">Tgl Selesai</label>
+                                        <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-gray-200" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
+                                <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-600">Batal</button>
+                                <button type="submit" className="px-6 py-2.5 bg-amber-600 text-white rounded-xl font-bold shadow-lg">Simpan Proyek</button>
+                            </div>
+                        </form>
                     </motion.div>
                 </div>
             )}

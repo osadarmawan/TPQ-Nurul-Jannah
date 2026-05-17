@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
     UserCircle, 
     ShieldCheck, 
@@ -23,23 +23,19 @@ import {
     User,
     Printer,
     MessageSquare,
-    Eye
+    Eye,
+    Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { UserRole } from '../types';
 import { StaffModal, PayrollModal, ConfirmModal, StaffProfileModal, StaffIDCardModal, StaffMessageModal } from './Modals';
-
-const STAFF_DATA = [
-    { id: 1, nama: 'Ustadz Mansur', nip: 'TPQ-001', role: 'Kepala TPQ', status: 'Aktif', email: 'mansur@tpq.com', phone: '0812-3456-7890', joinDate: '2020-01-10', salary: '3.500.000' },
-    { id: 2, nama: 'Ustadzah Fatimah', nip: 'TPQ-002', role: 'Pengajar Jilid 6', status: 'Aktif', email: 'fatimah@tpq.com', phone: '0812-3456-7891', joinDate: '2021-05-15', salary: '2.800.000' },
-    { id: 3, nama: 'Ustadz Ali', nip: 'TPQ-003', role: 'Pengajar Jilid 1', status: 'Aktif', email: 'ali@tpq.com', phone: '0812-3456-7892', joinDate: '2022-03-20', salary: '2.500.000' },
-    { id: 4, nama: 'Siti Aminah', nip: 'TPQ-004', role: 'Administrasi', status: 'Aktif', email: 'siti@tpq.com', phone: '0812-3456-7893', joinDate: '2023-01-05', salary: '2.200.000' },
-    { id: 5, nama: 'Ustadz Yusuf', nip: 'TPQ-005', role: 'Pengajar Al-Quran', status: 'Cuti', email: 'yusuf@tpq.com', phone: '0812-3456-7894', joinDate: '2021-11-12', salary: '2.800.000' },
-    { id: 6, nama: 'Ustadzah Maryam', nip: 'TPQ-006', role: 'Pengajar Jilid 4', status: 'Aktif', email: 'maryam@tpq.com', phone: '0812-3456-7895', joinDate: '2023-06-01', salary: '2.500.000' },
-];
+import { dbService } from '../services/dbService';
 
 export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | 'dark', role: UserRole }) => {
+    const [staffData, setStaffData] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
@@ -55,23 +51,74 @@ export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | '
 
     const isDark = theme === 'dark';
 
-    const stats = [
-        { label: 'Total Pegawai', value: '12', icon: UserCircle, color: 'bg-blue-500' },
-        { label: 'Ustadz/ah', value: '9', icon: Award, color: 'bg-emerald-500' },
-        { label: 'Administrasi', value: '2', icon: Briefcase, color: 'bg-amber-500' },
-        { label: 'Hadir Hari Ini', value: '10', icon: CheckCircle2, color: 'bg-purple-500' },
-    ];
+    const fetchStaff = async () => {
+        try {
+            setIsLoading(true);
+            const data = await dbService.read('Staff');
+            setStaffData(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching staff:', err);
+            setError('Gagal memuat data pegawai. Pastikan koneksi internet stabil.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStaff();
+    }, []);
+
+    const stats = useMemo(() => [
+        { label: 'Total Pegawai', value: staffData.length.toString(), icon: UserCircle, color: 'bg-blue-500' },
+        { label: 'Ustadz/ah', value: staffData.filter(s => s.role?.includes('Pengajar')).length.toString(), icon: Award, color: 'bg-emerald-500' },
+        { label: 'Administrasi', value: staffData.filter(s => s.role === 'Administrasi').length.toString(), icon: Briefcase, color: 'bg-amber-500' },
+        { label: 'Hadir Hari Ini', value: (staffData.length > 0 ? Math.floor(staffData.length * 0.8) : 0).toString(), icon: CheckCircle2, color: 'bg-purple-500' },
+    ], [staffData]);
 
     const filteredStaff = useMemo(() => {
-        return STAFF_DATA.filter(staff => {
+        return staffData.filter(staff => {
             const searchLower = searchTerm.toLowerCase();
             return (
-                staff.nama.toLowerCase().includes(searchLower) ||
-                staff.nip.toLowerCase().includes(searchLower) ||
-                staff.role.toLowerCase().includes(searchLower)
+                (staff.nama?.toLowerCase().includes(searchLower) || '') ||
+                (staff.nip?.toLowerCase().includes(searchLower) || '') ||
+                (staff.role?.toLowerCase().includes(searchLower) || '')
             );
         });
-    }, [searchTerm]);
+    }, [searchTerm, staffData]);
+
+    const handleStaffSubmit = async (data: any) => {
+        try {
+            setIsLoading(true);
+            if (staffModalMode === 'add') {
+                await dbService.create('Staff', data);
+            } else {
+                await dbService.update('Staff', selectedStaff.id, data);
+            }
+            await fetchStaff();
+            setIsStaffModalOpen(false);
+        } catch (err) {
+            console.error('Error saving staff:', err);
+            alert('Gagal menyimpan data pegawai.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!selectedStaff) return;
+        try {
+            setIsLoading(true);
+            await dbService.delete('Staff', selectedStaff.id);
+            await fetchStaff();
+            setIsConfirmOpen(false);
+        } catch (err) {
+            console.error('Error deleting staff:', err);
+            alert('Gagal menghapus data pegawai.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleEdit = (staff: any) => {
         setStaffModalMode('edit');
@@ -294,7 +341,25 @@ export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | '
 
                 {/* Table */}
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    {isLoading && staffData.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center p-20">
+                            <Loader2 size={40} className="text-emerald-500 animate-spin mb-4" />
+                            <p className="text-gray-500 font-medium">Memuat data pegawai...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="flex flex-col items-center justify-center p-20 text-center">
+                            <XCircle size={40} className="text-red-500 mb-4" />
+                            <p className="text-red-600 font-bold mb-2">Terjadi Kesalahan</p>
+                            <p className="text-gray-500 max-w-xs">{error}</p>
+                            <button 
+                                onClick={fetchStaff}
+                                className="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-xl font-medium"
+                            >
+                                Coba Lagi
+                            </button>
+                        </div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className={cn(
                                 "text-[11px] uppercase tracking-widest font-bold border-b transition-colors",
@@ -492,7 +557,8 @@ export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | '
                             ))}
                         </tbody>
                     </table>
-                </div>
+                )}
+            </div>
 
                 {/* Pagination */}
                 <div className={cn(
@@ -633,6 +699,7 @@ export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | '
                 onClose={() => setIsStaffModalOpen(false)}
                 mode={staffModalMode}
                 initialData={selectedStaff}
+                onSubmit={handleStaffSubmit}
             />
             <PayrollModal 
                 isOpen={isPayrollModalOpen}
@@ -641,7 +708,7 @@ export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | '
             <ConfirmModal 
                 isOpen={isConfirmOpen}
                 onClose={() => setIsConfirmOpen(false)}
-                onConfirm={() => setIsConfirmOpen(false)}
+                onConfirm={handleConfirmDelete}
                 title="Hapus Data Pegawai?"
                 message={`Anda akan menghapus data ${selectedStaff?.nama}. Tindakan ini tidak dapat dibatalkan.`}
             />

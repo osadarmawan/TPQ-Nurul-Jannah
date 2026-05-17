@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     BookOpen, 
     TrendingUp, 
@@ -14,7 +14,9 @@ import {
     MoreVertical,
     ArrowUpRight,
     BookMarked,
-    FileText
+    FileText,
+    Loader2,
+    XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -29,6 +31,8 @@ import {
     AreaChart,
     Area
 } from 'recharts';
+import { UserRole } from '../types';
+import { dbService } from '../services/dbService';
 
 const PROGRESS_DATA = [
     { name: 'Jan', lulus: 12, aktif: 85 },
@@ -49,17 +53,52 @@ const JILID_STATS = [
     { name: 'Al-Quran', count: 28, color: '#064E3B' },
 ];
 
-const RECENT_ASSESSMENTS = [
-    { id: 1, nama: 'Ahmad Fauzi', jilid: '4', materi: 'Surah Al-Mulk', nilai: 'A', tanggal: '14 Mar 2026', ustadz: 'Ustadz Mansur' },
-    { id: 2, nama: 'Siti Aminah', jilid: '6', materi: 'Ghorib & Musykilat', nilai: 'B+', tanggal: '13 Mar 2026', ustadz: 'Ustadzah Fatimah' },
-    { id: 3, nama: 'Budi Doremi', jilid: '1', materi: 'Halaman 15-20', nilai: 'A-', tanggal: '13 Mar 2026', ustadz: 'Ustadz Ali' },
-    { id: 4, nama: 'Farah Quinn', jilid: 'Al-Quran', materi: 'Juz 25', nilai: 'A', tanggal: '12 Mar 2026', ustadz: 'Ustadzah Fatimah' },
-];
-
-import { UserRole } from '../types';
+import { AcademicModal } from './Modals';
 
 export const AcademicManagement = ({ theme, role }: { theme: 'light' | 'dark', role: UserRole }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'progress' | 'kurikulum' | 'ujian'>('overview');
+    const [academicData, setAcademicData] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<any>(null);
+
+    const fetchAcademicData = async () => {
+        try {
+            setIsLoading(true);
+            const data = await dbService.read('Academic');
+            setAcademicData(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching academic data:', err);
+            setError('Gagal memuat data akademik.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSubmit = async (formData: any) => {
+        setIsLoading(true);
+        try {
+            if (selectedItem) {
+                await dbService.update('Academic', selectedItem.id, formData);
+            } else {
+                await dbService.create('Academic', { ...formData, id: Date.now() });
+            }
+            setIsModalOpen(false);
+            setSelectedItem(null);
+            fetchAcademicData();
+        } catch (err) {
+            console.error('Failed to save academic data:', err);
+            alert('Gagal menyimpan data akademik: ' + err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAcademicData();
+    }, []);
 
     const tabs = [
         { id: 'overview', label: 'Ikhtisar', icon: BarChart3 },
@@ -82,7 +121,13 @@ export const AcademicManagement = ({ theme, role }: { theme: 'light' | 'dark', r
                         <span className="text-sm font-medium">Laporan Akademik</span>
                     </button>
                     {(role === 'Admin' || role === 'Pegawai') && (
-                        <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
+                        <button 
+                            onClick={() => {
+                                setSelectedItem(null);
+                                setIsModalOpen(true);
+                            }}
+                            className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20"
+                        >
                             <Plus size={18} />
                             <span>Input Nilai Baru</span>
                         </button>
@@ -218,56 +263,74 @@ export const AcademicManagement = ({ theme, role }: { theme: 'light' | 'dark', r
                                 <button className="text-sm font-bold text-[#064E3B] hover:underline">Lihat Semua</button>
                             </div>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-gray-50/50 text-gray-400 text-[11px] uppercase tracking-widest font-bold border-b border-gray-100">
-                                            <th className="px-6 py-4">Santri</th>
-                                            <th className="px-6 py-4">Jilid</th>
-                                            <th className="px-6 py-4">Materi</th>
-                                            <th className="px-6 py-4">Nilai</th>
-                                            <th className="px-6 py-4">Ustadz/ah</th>
-                                            <th className="px-6 py-4">Tanggal</th>
-                                            {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50">
-                                        {RECENT_ASSESSMENTS.map((item) => (
-                                            <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center space-x-3">
-                                                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[#064E3B] font-bold text-xs">
-                                                            {item.nama.charAt(0)}
-                                                        </div>
-                                                        <span className="text-sm font-bold text-gray-800">{item.nama}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs font-bold">
-                                                        {item.jilid}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">{item.materi}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={cn(
-                                                        "px-2.5 py-1 rounded-full text-xs font-bold",
-                                                        item.nilai.startsWith('A') ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"
-                                                    )}>
-                                                        {item.nilai}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">{item.ustadz}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-400">{item.tanggal}</td>
-                                                {role !== 'Tamu' && (
-                                                    <td className="px-6 py-4 text-right">
-                                                        <button className="p-2 text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-colors">
-                                                            <ArrowUpRight size={18} />
-                                                        </button>
-                                                    </td>
-                                                )}
+                                {isLoading && academicData.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center p-12">
+                                        <Loader2 size={32} className="text-emerald-500 animate-spin mb-3" />
+                                        <p className="text-sm text-gray-500 font-medium">Memuat data akademik...</p>
+                                    </div>
+                                ) : error ? (
+                                    <div className="flex flex-col items-center justify-center p-12 text-center" id="academic-error">
+                                        <XCircle size={32} className="text-red-500 mb-3" />
+                                        <p className="text-red-600 font-bold mb-1 text-sm">Terjadi Kesalahan</p>
+                                        <button 
+                                            onClick={fetchAcademicData}
+                                            className="mt-4 px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium"
+                                        >
+                                            Coba Lagi
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-50/50 text-gray-400 text-[11px] uppercase tracking-widest font-bold border-b border-gray-100">
+                                                <th className="px-6 py-4">Santri</th>
+                                                <th className="px-6 py-4">Jilid</th>
+                                                <th className="px-6 py-4">Materi</th>
+                                                <th className="px-6 py-4">Nilai</th>
+                                                <th className="px-6 py-4">Ustadz/ah</th>
+                                                <th className="px-6 py-4">Tanggal</th>
+                                                {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {academicData.map((item) => (
+                                                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center space-x-3">
+                                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[#064E3B] font-bold text-xs">
+                                                                {(item.nama || 'S').charAt(0)}
+                                                            </div>
+                                                            <span className="text-sm font-bold text-gray-800">{item.nama}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs font-bold">
+                                                            {item.jilid}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">{item.materi}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={cn(
+                                                            "px-2.5 py-1 rounded-full text-xs font-bold",
+                                                            (item.nilai || '').startsWith('A') ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"
+                                                        )}>
+                                                            {item.nilai}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-500">{item.ustadz}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-400">{item.tanggal}</td>
+                                                    {role !== 'Tamu' && (
+                                                        <td className="px-6 py-4 text-right">
+                                                            <button className="p-2 text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-colors">
+                                                                <ArrowUpRight size={18} />
+                                                            </button>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
                         </div>
                     </motion.div>
@@ -367,6 +430,13 @@ export const AcademicManagement = ({ theme, role }: { theme: 'light' | 'dark', r
                     </motion.div>
                 )}
             </AnimatePresence>
+            <AcademicModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleSubmit}
+                initialData={selectedItem}
+                mode={selectedItem ? 'edit' : 'add'}
+            />
         </div>
     );
 };

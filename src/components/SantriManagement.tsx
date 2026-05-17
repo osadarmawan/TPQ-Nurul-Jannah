@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
     Users, 
     UserCheck, 
@@ -20,27 +20,20 @@ import {
     Printer,
     MessageSquare,
     History,
-    ArrowUp
+    ArrowUp,
+    RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { UserRole } from '../types';
 import { SantriModal, ConfirmModal, SantriDetailModal, SantriIDCardModal, SantriWAModal, SantriAcademicHistoryModal } from './Modals';
-
-const SANTRI_DATA = [
-    { id: 1, nama: 'Ahmad Fauzi', nis: '2023001', status: 'Siswa', jilid: '4', ortu: 'Budi Santoso', gender: 'Laki-laki', tglDaftar: '2023-01-15' },
-    { id: 2, nama: 'Siti Aminah', nis: '2023002', status: 'Siswa', jilid: '6', ortu: 'Siti Nurhaliza', gender: 'Perempuan', tglDaftar: '2023-02-10' },
-    { id: 3, nama: 'Budi Doremi', nis: '2024001', status: 'Calon', jilid: '1', ortu: 'Doremi Fasolasido', gender: 'Laki-laki', tglDaftar: '2024-03-01' },
-    { id: 4, nama: 'Cici Paramida', nis: '2023003', status: 'Siswa', jilid: '5', ortu: 'Paramida Sari', gender: 'Perempuan', tglDaftar: '2023-05-20' },
-    { id: 5, nama: 'Dedi Corbuzier', nis: '2024002', status: 'Calon', jilid: '1', ortu: 'Corbuzier', gender: 'Laki-laki', tglDaftar: '2024-03-05' },
-    { id: 6, nama: 'Eka Saputra', nis: '2023004', status: 'Siswa', jilid: '3', ortu: 'Saputra Jaya', gender: 'Laki-laki', tglDaftar: '2023-06-12' },
-    { id: 7, nama: 'Farah Quinn', nis: '2023005', status: 'Siswa', jilid: 'Al-Quran', ortu: 'Quinn Cook', gender: 'Perempuan', tglDaftar: '2023-07-22' },
-    { id: 8, nama: 'Gading Marten', nis: '2024003', status: 'Calon', jilid: '1', ortu: 'Roy Marten', gender: 'Laki-laki', tglDaftar: '2024-03-10' },
-];
+import { dbService } from '../services/dbService';
 
 export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', role: UserRole }) => {
+    const [santriData, setSantriData] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -50,7 +43,7 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
     const [selectedSantri, setSelectedSantri] = useState<any>(null);
-    const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
+    const [activeActionMenu, setActiveActionMenu] = useState<string | number | null>(null);
 
     // New state for filters and pagination
     const [statusFilter, setStatusFilter] = useState<string>('Semua');
@@ -59,7 +52,21 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
     const [currentPage, setCurrentPage] = useState(1);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
-    React.useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const data = await dbService.read('Santri');
+            setSantriData(data);
+        } catch (error) {
+            console.error('Failed to fetch santri:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+        
         const handleScroll = () => {
             if (window.scrollY > 300) {
                 setShowScrollTop(true);
@@ -77,18 +84,19 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
     };
 
     const filteredData = useMemo(() => {
-        return SANTRI_DATA.filter(santri => {
+        return (santriData || []).filter(santri => {
             const searchLower = searchTerm.toLowerCase();
-            const matchesSearch = santri.nama.toLowerCase().includes(searchLower) ||
-                santri.nis.toLowerCase().includes(searchLower) ||
-                santri.ortu.toLowerCase().includes(searchLower);
+            const matchesSearch = 
+                (santri.nama || '').toLowerCase().includes(searchLower) ||
+                (String(santri.nis) || '').toLowerCase().includes(searchLower) ||
+                (santri.ortu || '').toLowerCase().includes(searchLower);
             
             const matchesStatus = statusFilter === 'Semua' || santri.status === statusFilter;
             const matchesGender = genderFilter === 'Semua' || santri.gender === genderFilter;
 
             return matchesSearch && matchesStatus && matchesGender;
         });
-    }, [searchTerm, statusFilter, genderFilter]);
+    }, [santriData, searchTerm, statusFilter, genderFilter]);
 
     const paginatedData = useMemo(() => {
         if (itemsPerPage === 'Semua') return filteredData;
@@ -99,21 +107,21 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
     const totalPages = itemsPerPage === 'Semua' ? 1 : Math.ceil(filteredData.length / itemsPerPage);
 
     const stats = [
-        { label: 'Total Santri', value: '128', icon: Users, color: 'bg-blue-500' },
-        { label: 'Siswa Aktif', value: '112', icon: UserCheck, color: 'bg-emerald-500' },
-        { label: 'Calon Santri', value: '16', icon: UserPlus, color: 'bg-amber-500' },
-        { label: 'Lulus Al-Quran', value: '42', icon: GraduationCap, color: 'bg-purple-500' },
+        { label: 'Total Santri', value: santriData.length.toString(), icon: Users, color: 'bg-blue-500' },
+        { label: 'Siswa Aktif', value: santriData.filter(s => s.status === 'Siswa').length.toString(), icon: UserCheck, color: 'bg-emerald-500' },
+        { label: 'Calon Santri', value: santriData.filter(s => s.status === 'Calon').length.toString(), icon: UserPlus, color: 'bg-amber-500' },
+        { label: 'Lulus Al-Quran', value: santriData.filter(s => s.jilid === 'Al-Quran').length.toString(), icon: GraduationCap, color: 'bg-purple-500' },
     ];
 
     const toggleSelectAll = () => {
-        if (selectedIds.length === SANTRI_DATA.length) {
+        if (selectedIds.length === santriData.length && santriData.length > 0) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(SANTRI_DATA.map(s => s.id));
+            setSelectedIds(santriData.map(s => s.id));
         }
     };
 
-    const toggleSelect = (id: number) => {
+    const toggleSelect = (id: any) => {
         if (selectedIds.includes(id)) {
             setSelectedIds(selectedIds.filter(i => i !== id));
         } else {
@@ -135,6 +143,34 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
     const handleDelete = (santri: any) => {
         setSelectedSantri(santri);
         setIsConfirmOpen(true);
+    };
+
+    const handleModalSubmit = async (data: any) => {
+        setIsLoading(true);
+        try {
+            if (modalMode === 'add') {
+                await dbService.create('Santri', data);
+            } else {
+                await dbService.update('Santri', data.id, data);
+            }
+            setIsModalOpen(false);
+            fetchData();
+        } catch (error) {
+            alert('Gagal menyimpan data: ' + error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!selectedSantri) return;
+        try {
+            await dbService.delete('Santri', selectedSantri.id);
+            setIsConfirmOpen(false);
+            fetchData();
+        } catch (error) {
+            alert('Gagal menghapus data: ' + error);
+        }
     };
 
     return (
@@ -214,6 +250,15 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                                     )}
                                 </AnimatePresence>
                             </div>
+                            <button 
+                                onClick={fetchData}
+                                className={cn(
+                                    "p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors",
+                                    isLoading && "animate-spin"
+                                )}
+                            >
+                                <RefreshCw size={20} />
+                            </button>
                         </div>
                         <div className="flex items-center space-x-3">
                             <button className="flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
@@ -255,13 +300,13 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto min-h-[400px]">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 text-gray-400 text-[11px] uppercase tracking-widest font-bold border-b border-gray-100">
                                 <th className="px-6 py-4 w-12">
                                     <button onClick={toggleSelectAll} className="text-gray-400 hover:text-[#064E3B] transition-colors">
-                                        {selectedIds.length === SANTRI_DATA.length ? <CheckSquare size={18} /> : <Square size={18} />}
+                                        {selectedIds.length === santriData.length && santriData.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
                                     </button>
                                 </th>
                                 <th className="px-6 py-4">
@@ -279,7 +324,23 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {paginatedData.length > 0 ? (
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-6 py-4"><div className="w-5 h-5 bg-gray-100 rounded"></div></td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-9 h-9 rounded-full bg-gray-100"></div>
+                                                <div className="space-y-2">
+                                                    <div className="w-24 h-3 bg-gray-100 rounded"></div>
+                                                    <div className="w-16 h-2 bg-gray-50 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td colSpan={6} className="px-6 py-4"><div className="w-full h-3 bg-gray-50 rounded"></div></td>
+                                    </tr>
+                                ))
+                            ) : paginatedData.length > 0 ? (
                                 paginatedData.map((santri) => (
                                     <tr key={santri.id} className={cn(
                                         "group transition-colors",
@@ -296,11 +357,11 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                                         <td className="px-6 py-4">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-[#064E3B] font-bold text-sm">
-                                                    {santri.nama.charAt(0)}
+                                                    {(santri.nama || 'S').charAt(0)}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-gray-800">{santri.nama}</p>
-                                                    <p className="text-[10px] text-gray-400">Daftar: {santri.tglDaftar}</p>
+                                                    <p className="text-[10px] text-gray-400">Daftar: {santri.tglDaftar || '-'}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -341,9 +402,7 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                                                             </button>
                                                         </>
                                                     )}
-                                                    <div 
-                                                        className="relative"
-                                                    >
+                                                    <div className="relative">
                                                         <button 
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -407,14 +466,18 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                                             </div>
                                             <div>
                                                 <p className="text-lg font-bold text-gray-800">Santri Tidak Ditemukan</p>
-                                                <p className="text-sm text-gray-500">Tidak ada data yang cocok dengan "{searchTerm}"</p>
+                                                <p className="text-sm text-gray-500">
+                                                    {searchTerm ? `Tidak ada data yang cocok dengan "${searchTerm}"` : 'Belum ada data santri'}
+                                                </p>
                                             </div>
-                                            <button 
-                                                onClick={() => setSearchTerm('')}
-                                                className="px-4 py-2 text-sm font-medium text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-colors"
-                                            >
-                                                Bersihkan Pencarian
-                                            </button>
+                                            {searchTerm && (
+                                                <button 
+                                                    onClick={() => setSearchTerm('')}
+                                                    className="px-4 py-2 text-sm font-medium text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-colors"
+                                                >
+                                                    Bersihkan Pencarian
+                                                </button>
+                                            )}
                                         </motion.div>
                                     </td>
                                 </tr>
@@ -517,6 +580,7 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
                 onClose={() => setIsModalOpen(false)} 
                 mode={modalMode}
                 initialData={selectedSantri}
+                onSubmit={handleModalSubmit}
             />
             <SantriDetailModal 
                 isOpen={isDetailOpen}
@@ -526,7 +590,7 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
             <ConfirmModal 
                 isOpen={isConfirmOpen}
                 onClose={() => setIsConfirmOpen(false)}
-                onConfirm={() => setIsConfirmOpen(false)}
+                onConfirm={handleConfirmDelete}
                 title="Hapus Data Santri?"
                 message={`Anda akan menghapus data ${selectedSantri?.nama}. Tindakan ini tidak dapat dibatalkan.`}
             />
@@ -548,3 +612,4 @@ export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', rol
         </div>
     );
 };
+

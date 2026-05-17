@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     DollarSign, 
     TrendingUp, 
@@ -21,7 +21,9 @@ import {
     FileText,
     CheckCircle2,
     User,
-    Trash2
+    Trash2,
+    Loader2,
+    XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -37,6 +39,9 @@ import {
     Pie,
     Cell
 } from 'recharts';
+import { UserRole } from '../types';
+import { dbService } from '../services/dbService';
+import { FinanceModal } from './Modals';
 
 const MOCK_FINANCE_DATA = [
     { name: 'Jan', income: 4500000, expense: 3200000 },
@@ -53,20 +58,45 @@ const CATEGORY_DATA = [
     { name: 'Pendaftaran', value: 15, color: '#34D399' },
 ];
 
-const TRANSACTIONS = [
-    { id: 1, trxId: 'TRX-20240314-001', date: '2024-03-14', time: '09:30 WIB', desc: 'Pembayaran SPP - Ahmad Fauzi', cat: 'SPP Santri', type: 'income', amount: '150.000', method: 'Transfer BSI', cashier: 'Siti Aminah' },
-    { id: 2, trxId: 'TRX-20240314-002', date: '2024-03-14', time: '13:15 WIB', desc: 'Gaji Ustadz Mansur', cat: 'Gaji Pegawai', type: 'expense', amount: '3.500.000', method: 'Transfer BNI', cashier: 'Siti Aminah' },
-    { id: 3, trxId: 'TRX-20240313-001', date: '2024-03-13', time: '10:00 WIB', desc: 'Donasi Hamba Allah', cat: 'Donasi', type: 'income', amount: '1.000.000', method: 'Tunai', cashier: 'Ustadz Mansur' },
-    { id: 4, trxId: 'TRX-20240312-001', date: '2024-03-12', time: '08:45 WIB', desc: 'Listrik & Air Maret', cat: 'Operasional', type: 'expense', amount: '450.000', method: 'Transfer Mandiri', cashier: 'Siti Aminah' },
-    { id: 5, trxId: 'TRX-20240312-002', date: '2024-03-12', time: '11:20 WIB', desc: 'Pembelian Buku Iqra', cat: 'Sarana', type: 'expense', amount: '750.000', method: 'Tunai', cashier: 'Siti Aminah' },
-];
-
-import { UserRole } from '../types';
-
 export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', role: UserRole }) => {
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
     const [selectedTransactionIds, setSelectedTransactionIds] = useState<number[]>([]);
+
+    const fetchFinanceData = async () => {
+        try {
+            setIsLoading(true);
+            const data = await dbService.read('Finance');
+            setTransactions(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching finance data:', err);
+            setError('Gagal memuat data keuangan.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchFinanceData();
+    }, []);
+
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter(trx => {
+            const searchLower = searchTerm.toLowerCase();
+            return (
+                (trx.desc?.toLowerCase().includes(searchLower) || '') ||
+                (trx.trxId?.toLowerCase().includes(searchLower) || '') ||
+                (trx.cat?.toLowerCase().includes(searchLower) || '')
+            );
+        });
+    }, [searchTerm, transactions]);
 
     const handleViewDetail = (transaction: any) => {
         setSelectedTransaction(transaction);
@@ -75,7 +105,7 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
-            setSelectedTransactionIds(TRANSACTIONS.map(t => t.id));
+            setSelectedTransactionIds(filteredTransactions.map(t => t.id));
         } else {
             setSelectedTransactionIds([]);
         }
@@ -85,6 +115,80 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
         setSelectedTransactionIds(prev => 
             prev.includes(id) ? prev.filter(trxId => trxId !== id) : [...prev, id]
         );
+    };
+
+    const handleFinanceSubmit = async (formData: any) => {
+        try {
+            setIsLoading(true);
+            if (modalMode === 'add') {
+                const newTrx = {
+                    ...formData,
+                    trxId: `TRX-${Date.now().toString().slice(-6)}`,
+                    time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                    cashier: 'Admin'
+                };
+                await dbService.create('Finance', newTrx);
+            } else {
+                await dbService.update('Finance', selectedTransaction.id, formData);
+            }
+            await fetchFinanceData();
+            setIsInputModalOpen(false);
+        } catch (err) {
+            console.error('Error saving finance data:', err);
+            alert('Gagal menyimpan data keuangan. Periksa konfigurasi database.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const chartData = useMemo(() => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentYear = new Date().getFullYear();
+        
+        // Initialize data for last 6 months
+        const last6Months = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            last6Months.push({
+                name: months[d.getMonth()],
+                monthIdx: d.getMonth(),
+                year: d.getFullYear(),
+                income: 0,
+                expense: 0
+            });
+        }
+
+        transactions.forEach(trx => {
+            const trxDate = new Date(trx.date);
+            const amount = parseFloat(trx.amount?.toString().replace(/\./g, '').replace(',', '.') || '0');
+            
+            const monthIdx = last6Months.findIndex(m => m.monthIdx === trxDate.getMonth() && m.year === trxDate.getFullYear());
+            if (monthIdx !== -1) {
+                if (trx.type === 'income') {
+                    last6Months[monthIdx].income += amount;
+                } else {
+                    last6Months[monthIdx].expense += amount;
+                }
+            }
+        });
+
+        return last6Months;
+    }, [transactions]);
+
+    const stats = useMemo(() => {
+        const totalIncome = transactions.reduce((acc, t) => t.type === 'income' ? acc + parseFloat(t.amount?.toString().replace(/\./g, '').replace(',', '.') || '0') : acc, 0);
+        const totalExpense = transactions.reduce((acc, t) => t.type === 'expense' ? acc + parseFloat(t.amount?.toString().replace(/\./g, '').replace(',', '.') || '0') : acc, 0);
+        
+        return {
+            balance: totalIncome - totalExpense,
+            income: totalIncome,
+            expense: totalExpense
+        };
+    }, [transactions]);
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
     };
 
     return (
@@ -101,7 +205,10 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
                         <span className="text-sm font-medium">Ekspor Laporan</span>
                     </button>
                     {role === 'Admin' && (
-                        <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
+                        <button 
+                            onClick={() => { setModalMode('add'); setSelectedTransaction(null); setIsInputModalOpen(true); }}
+                            className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20"
+                        >
                             <Plus size={18} />
                             <span>Transaksi Baru</span>
                         </button>
@@ -116,10 +223,10 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
                         <Wallet size={80} className="text-emerald-600" />
                     </div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Saldo Utama</p>
-                    <h3 className="text-3xl font-bold text-gray-900">Rp 45.280.000</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">{formatCurrency(stats.balance)}</h3>
                     <div className="mt-4 flex items-center text-emerald-600 text-xs font-bold">
                         <ArrowUpRight size={14} className="mr-1" />
-                        <span>+12.5% dari bulan lalu</span>
+                        <span>Real-time Update</span>
                     </div>
                 </motion.div>
 
@@ -127,11 +234,11 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <TrendingUp size={80} className="text-blue-600" />
                     </div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Pemasukan (Mar)</p>
-                    <h3 className="text-3xl font-bold text-gray-900">Rp 8.450.000</h3>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Pemasukan</p>
+                    <h3 className="text-3xl font-bold text-gray-900">{formatCurrency(stats.income)}</h3>
                     <div className="mt-4 flex items-center text-blue-600 text-xs font-bold">
-                        <ArrowUpRight size={14} className="mr-1" />
-                        <span>Target: 85% tercapai</span>
+                        <Plus size={14} className="mr-1" />
+                        <span>Akumulasi Seluruh Data</span>
                     </div>
                 </motion.div>
 
@@ -139,11 +246,11 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <TrendingDown size={80} className="text-red-600" />
                     </div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Pengeluaran (Mar)</p>
-                    <h3 className="text-3xl font-bold text-gray-900">Rp 5.120.000</h3>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Pengeluaran</p>
+                    <h3 className="text-3xl font-bold text-gray-900">{formatCurrency(stats.expense)}</h3>
                     <div className="mt-4 flex items-center text-red-600 text-xs font-bold">
-                        <ArrowDownRight size={14} className="mr-1" />
-                        <span>-2.4% efisiensi biaya</span>
+                        <TrendingDown size={14} className="mr-1" />
+                        <span>Akumulasi Seluruh Data</span>
                     </div>
                 </motion.div>
             </div>
@@ -163,7 +270,7 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
                     </div>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={MOCK_FINANCE_DATA}>
+                            <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.1}/>
@@ -266,74 +373,102 @@ export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', ro
                     </div>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                <th className="px-6 py-4 w-12">
-                                    <input 
-                                        type="checkbox" 
-                                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer"
-                                        checked={TRANSACTIONS.length > 0 && selectedTransactionIds.length === TRANSACTIONS.length}
-                                        onChange={handleSelectAll}
-                                    />
-                                </th>
-                                <th className="px-6 py-4">Tanggal</th>
-                                <th className="px-6 py-4">Deskripsi</th>
-                                <th className="px-6 py-4">Kategori</th>
-                                <th className="px-6 py-4">Jumlah</th>
-                                {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {TRANSACTIONS.map((t) => (
-                                <tr key={t.id} className={cn(
-                                    "transition-colors",
-                                    selectedTransactionIds.includes(t.id) ? "bg-emerald-50/50" : "hover:bg-gray-50/50"
-                                )}>
-                                    <td className="px-6 py-4">
+                    {isLoading && transactions.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center p-20 text-center">
+                            <Loader2 size={40} className="text-emerald-500 animate-spin mb-4" />
+                            <p className="text-gray-500 font-medium">Memuat data transaksi...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="flex flex-col items-center justify-center p-20 text-center">
+                            <XCircle size={40} className="text-red-500 mb-4" />
+                            <p className="text-red-600 font-bold mb-2">Terjadi Kesalahan</p>
+                            <p className="text-gray-500 max-w-xs">{error}</p>
+                            <button 
+                                onClick={fetchFinanceData}
+                                className="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-xl font-medium"
+                            >
+                                Coba Lagi
+                            </button>
+                        </div>
+                    ) : (
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    <th className="px-6 py-4 w-12">
                                         <input 
                                             type="checkbox" 
                                             className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer"
-                                            checked={selectedTransactionIds.includes(t.id)}
-                                            onChange={() => handleSelectTransaction(t.id)}
+                                            checked={filteredTransactions.length > 0 && selectedTransactionIds.length === filteredTransactions.length}
+                                            onChange={handleSelectAll}
                                         />
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{t.date}</td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm font-bold text-gray-800">{t.desc}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-bold text-gray-600 uppercase">
-                                            {t.cat}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className={cn(
-                                            "flex items-center font-bold text-sm",
-                                            t.type === 'income' ? "text-emerald-600" : "text-red-600"
-                                        )}>
-                                            {t.type === 'income' ? '+' : '-'} Rp {t.amount}
-                                        </div>
-                                    </td>
-                                    {role !== 'Tamu' && (
-                                        <td className="px-6 py-4 text-right">
-                                            <button 
-                                                onClick={() => handleViewDetail(t)}
-                                                className="p-2 rounded-lg text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 transition-all"
-                                            >
-                                                <ArrowRight size={18} />
-                                            </button>
-                                        </td>
-                                    )}
+                                    </th>
+                                    <th className="px-6 py-4">Tanggal</th>
+                                    <th className="px-6 py-4">Deskripsi</th>
+                                    <th className="px-6 py-4">Kategori</th>
+                                    <th className="px-6 py-4">Jumlah</th>
+                                    {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {filteredTransactions.map((t) => (
+                                    <tr key={t.id} className={cn(
+                                        "transition-colors",
+                                        selectedTransactionIds.includes(t.id) ? "bg-emerald-50/50" : "hover:bg-gray-50/50"
+                                    )}>
+                                        <td className="px-6 py-4">
+                                            <input 
+                                                type="checkbox" 
+                                                className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer"
+                                                checked={selectedTransactionIds.includes(t.id)}
+                                                onChange={() => handleSelectTransaction(t.id)}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">{t.date}</td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm font-bold text-gray-800">{t.desc}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-bold text-gray-600 uppercase">
+                                                {t.cat}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className={cn(
+                                                "flex items-center font-bold text-sm",
+                                                t.type === 'income' ? "text-emerald-600" : "text-red-600"
+                                            )}>
+                                                {t.type === 'income' ? '+' : '-'} Rp {t.amount}
+                                            </div>
+                                        </td>
+                                        {role !== 'Tamu' && (
+                                            <td className="px-6 py-4 text-right">
+                                                <button 
+                                                    onClick={() => handleViewDetail(t)}
+                                                    className="p-2 rounded-lg text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 transition-all"
+                                                >
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
                 <div className="p-4 bg-gray-50/50 text-center">
                     <button className="text-sm font-bold text-[#064E3B] hover:underline">Lihat Semua Transaksi</button>
                 </div>
             </div>
+
+            {/* Finance Modal */}
+            <FinanceModal 
+                isOpen={isInputModalOpen}
+                onClose={() => setIsInputModalOpen(false)}
+                onSubmit={handleFinanceSubmit}
+                initialData={selectedTransaction}
+                mode={modalMode}
+            />
 
             {/* Transaction Detail Modal */}
             <AnimatePresence>
