@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { UserRole } from '../types';
 import { StaffModal, PayrollModal, ConfirmModal, StaffProfileModal, StaffIDCardModal, StaffMessageModal } from './Modals';
 
 const STAFF_DATA = [
@@ -38,7 +39,7 @@ const STAFF_DATA = [
     { id: 6, nama: 'Ustadzah Maryam', nip: 'TPQ-006', role: 'Pengajar Jilid 4', status: 'Aktif', email: 'maryam@tpq.com', phone: '0812-3456-7895', joinDate: '2023-06-01', salary: '2.500.000' },
 ];
 
-export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' }) => {
+export const StaffManagement = ({ theme = 'light', role }: { theme?: 'light' | 'dark', role: UserRole }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
@@ -50,6 +51,7 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
     const [staffModalMode, setStaffModalMode] = useState<'add' | 'edit'>('add');
     const [selectedStaff, setSelectedStaff] = useState<any>(null);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
+    const [selectedStaffIds, setSelectedStaffIds] = useState<number[]>([]);
 
     const isDark = theme === 'dark';
 
@@ -82,6 +84,20 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
         setIsConfirmOpen(true);
     };
 
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedStaffIds(filteredStaff.map(staff => staff.id));
+        } else {
+            setSelectedStaffIds([]);
+        }
+    };
+
+    const handleSelectStaff = (id: number) => {
+        setSelectedStaffIds(prev => 
+            prev.includes(id) ? prev.filter(staffId => staffId !== id) : [...prev, id]
+        );
+    };
+
     return (
         <div className="space-y-8 pb-12">
             {/* Header Section */}
@@ -106,18 +122,20 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
                         <Clock size={18} />
                         <span className="text-sm font-medium">Presensi Staf</span>
                     </button>
-                    <button 
-                        onClick={() => { setStaffModalMode('add'); setSelectedStaff(null); setIsStaffModalOpen(true); }}
-                        className={cn(
-                            "flex items-center space-x-2 px-6 py-2.5 rounded-xl text-white font-medium transition-all shadow-lg",
-                            isDark 
-                                ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/40" 
-                                : "bg-[#064E3B] hover:bg-[#053F30] shadow-emerald-900/20"
-                        )}
-                    >
-                        <Plus size={18} />
-                        <span>Tambah Pegawai</span>
-                    </button>
+                    {role === 'Admin' && (
+                        <button 
+                            onClick={() => { setStaffModalMode('add'); setSelectedStaff(null); setIsStaffModalOpen(true); }}
+                            className={cn(
+                                "flex items-center space-x-2 px-6 py-2.5 rounded-xl text-white font-medium transition-all shadow-lg",
+                                isDark 
+                                    ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/40" 
+                                    : "bg-[#064E3B] hover:bg-[#053F30] shadow-emerald-900/20"
+                            )}
+                        >
+                            <Plus size={18} />
+                            <span>Tambah Pegawai</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -234,18 +252,43 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                        <button 
-                            onClick={() => setIsPayrollModalOpen(true)}
-                            className={cn(
-                                "flex items-center space-x-2 px-4 py-2.5 rounded-xl border transition-colors",
-                                isDark 
-                                    ? "bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-700" 
-                                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                        <AnimatePresence>
+                            {selectedStaffIds.length > 0 && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex items-center space-x-2 mr-2"
+                                >
+                                    <span className={cn("text-sm font-medium px-2", isDark ? "text-emerald-400" : "text-emerald-700")}>
+                                        {selectedStaffIds.length} dipilih
+                                    </span>
+                                    <button className={cn(
+                                        "p-2 rounded-xl border transition-all flex items-center space-x-2",
+                                        isDark 
+                                            ? "bg-red-900/20 border-red-900/30 text-red-400 hover:bg-red-900/40" 
+                                            : "bg-red-50 border-red-100 text-red-600 hover:bg-red-100"
+                                    )}>
+                                        <Trash2 size={16} />
+                                        <span className="text-sm font-medium hidden sm:inline">Hapus</span>
+                                    </button>
+                                </motion.div>
                             )}
-                        >
-                            <DollarSign size={18} />
-                            <span className="text-sm font-medium">Payroll</span>
-                        </button>
+                        </AnimatePresence>
+                        {role === 'Admin' && (
+                            <button 
+                                onClick={() => setIsPayrollModalOpen(true)}
+                                className={cn(
+                                    "flex items-center space-x-2 px-4 py-2.5 rounded-xl border transition-colors",
+                                    isDark 
+                                        ? "bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-700" 
+                                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                                )}
+                            >
+                                <DollarSign size={18} />
+                                <span className="text-sm font-medium">Payroll</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -259,13 +302,24 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
                                     ? "bg-gray-900/50 text-gray-500 border-gray-700" 
                                     : "bg-gray-50/50 text-gray-400 border-gray-100"
                             )}>
+                                <th className="px-6 py-4 w-12">
+                                    <input 
+                                        type="checkbox" 
+                                        className={cn(
+                                            "rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer",
+                                            isDark ? "bg-gray-800 border-gray-600" : "bg-white"
+                                        )}
+                                        checked={filteredStaff.length > 0 && selectedStaffIds.length === filteredStaff.length}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
                                 <th className="px-6 py-4">Pegawai</th>
                                 <th className="px-6 py-4">NIP</th>
                                 <th className="px-6 py-4">Jabatan</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Kontak</th>
                                 <th className="px-6 py-4">Gaji Pokok</th>
-                                <th className="px-6 py-4 text-right">Aksi</th>
+                                {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
                             </tr>
                         </thead>
                         <tbody className={cn(
@@ -275,8 +329,21 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
                             {filteredStaff.map((staff) => (
                                 <tr key={staff.id} className={cn(
                                     "transition-colors group",
-                                    isDark ? "hover:bg-gray-700/30" : "hover:bg-gray-50/50"
+                                    selectedStaffIds.includes(staff.id) 
+                                        ? (isDark ? "bg-emerald-900/20" : "bg-emerald-50/50") 
+                                        : (isDark ? "hover:bg-gray-700/30" : "hover:bg-gray-50/50")
                                 )}>
+                                    <td className="px-6 py-4">
+                                        <input 
+                                            type="checkbox" 
+                                            className={cn(
+                                                "rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer",
+                                                isDark ? "bg-gray-800 border-gray-600" : "bg-white"
+                                            )}
+                                            checked={selectedStaffIds.includes(staff.id)}
+                                            onChange={() => handleSelectStaff(staff.id)}
+                                        />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center space-x-3">
                                             <div className={cn(
@@ -333,88 +400,94 @@ export const StaffManagement = ({ theme = 'light' }: { theme?: 'light' | 'dark' 
                                         "px-6 py-4 text-sm font-bold transition-colors",
                                         isDark ? "text-gray-200" : "text-gray-700"
                                     )}>Rp {staff.salary}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end space-x-1">
-                                            <button 
-                                                onClick={() => handleEdit(staff)}
-                                                className={cn(
-                                                    "p-2 rounded-lg transition-all",
-                                                    isDark ? "text-gray-400 hover:text-blue-400 hover:bg-blue-900/30" : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
-                                                )}
-                                            >
-                                                <Edit size={16} />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDelete(staff)}
-                                                className={cn(
-                                                    "p-2 rounded-lg transition-all",
-                                                    isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-900/30" : "text-gray-400 hover:text-red-600 hover:bg-red-50"
-                                                )}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                            <div className="relative">
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setActiveActionMenu(activeActionMenu === staff.id ? null : staff.id);
-                                                    }}
-                                                    className={cn(
-                                                        "p-2 rounded-lg transition-all",
-                                                        activeActionMenu === staff.id 
-                                                            ? (isDark ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-900 shadow-inner") 
-                                                            : (isDark ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100")
-                                                    )}
-                                                >
-                                                    <MoreHorizontal size={16} />
-                                                </button>
-                                                <AnimatePresence>
-                                                    {activeActionMenu === staff.id && (
-                                                        <motion.div 
-                                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                    {role !== 'Tamu' && (
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end space-x-1">
+                                                {(role === 'Admin' || role === 'Pegawai') && (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => handleEdit(staff)}
                                                             className={cn(
-                                                                "absolute right-0 mt-2 w-44 rounded-xl shadow-2xl border z-[50] p-1 transition-colors",
-                                                                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
+                                                                "p-2 rounded-lg transition-all",
+                                                                isDark ? "text-gray-400 hover:text-blue-400 hover:bg-blue-900/30" : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                                                             )}
                                                         >
-                                                            <button 
-                                                                onClick={() => { setSelectedStaff(staff); setIsProfileModalOpen(true); setActiveActionMenu(null); }}
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDelete(staff)}
+                                                            className={cn(
+                                                                "p-2 rounded-lg transition-all",
+                                                                isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-900/30" : "text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                                            )}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <div className="relative">
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setActiveActionMenu(activeActionMenu === staff.id ? null : staff.id);
+                                                        }}
+                                                        className={cn(
+                                                            "p-2 rounded-lg transition-all",
+                                                            activeActionMenu === staff.id 
+                                                                ? (isDark ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-900 shadow-inner") 
+                                                                : (isDark ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100")
+                                                        )}
+                                                    >
+                                                        <MoreHorizontal size={16} />
+                                                    </button>
+                                                    <AnimatePresence>
+                                                        {activeActionMenu === staff.id && (
+                                                            <motion.div 
+                                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
                                                                 className={cn(
-                                                                    "w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-lg transition-colors",
-                                                                    isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-blue-50"
+                                                                    "absolute right-0 mt-2 w-44 rounded-xl shadow-2xl border z-[50] p-1 transition-colors",
+                                                                    isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
                                                                 )}
                                                             >
-                                                                <Eye size={14} className="text-blue-600" />
-                                                                <span>Lihat Profil</span>
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => { setSelectedStaff(staff); setIsIDCardModalOpen(true); setActiveActionMenu(null); }}
-                                                                className={cn(
-                                                                    "w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-lg transition-colors",
-                                                                    isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-blue-50"
-                                                                )}
-                                                            >
-                                                                <Printer size={14} className="text-blue-600" />
-                                                                <span>Cetak ID Card</span>
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => { setSelectedStaff(staff); setIsMessageModalOpen(true); setActiveActionMenu(null); }}
-                                                                className={cn(
-                                                                    "w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-lg transition-colors",
-                                                                    isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-blue-50"
-                                                                )}
-                                                            >
-                                                                <MessageSquare size={14} className="text-blue-600" />
-                                                                <span>Kirim Pesan</span>
-                                                            </button>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
+                                                                <button 
+                                                                    onClick={() => { setSelectedStaff(staff); setIsProfileModalOpen(true); setActiveActionMenu(null); }}
+                                                                    className={cn(
+                                                                        "w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-lg transition-colors",
+                                                                        isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-blue-50"
+                                                                    )}
+                                                                >
+                                                                    <Eye size={14} className="text-blue-600" />
+                                                                    <span>Lihat Profil</span>
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => { setSelectedStaff(staff); setIsIDCardModalOpen(true); setActiveActionMenu(null); }}
+                                                                    className={cn(
+                                                                        "w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-lg transition-colors",
+                                                                        isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-blue-50"
+                                                                    )}
+                                                                >
+                                                                    <Printer size={14} className="text-blue-600" />
+                                                                    <span>Cetak ID Card</span>
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => { setSelectedStaff(staff); setIsMessageModalOpen(true); setActiveActionMenu(null); }}
+                                                                    className={cn(
+                                                                        "w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-lg transition-colors",
+                                                                        isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-blue-50"
+                                                                    )}
+                                                                >
+                                                                    <MessageSquare size={14} className="text-blue-600" />
+                                                                    <span>Kirim Pesan</span>
+                                                                </button>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

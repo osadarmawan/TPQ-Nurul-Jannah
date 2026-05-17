@@ -8,34 +8,47 @@ import {
     Building,
     FileText, 
     Settings,
-    LogOut
+    LogOut,
+    LogIn,
+    MessageSquare
 } from 'lucide-react';
+import { UserInfo } from '../types';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
     activeMenu: string;
     setActiveMenu: (menu: string) => void;
-    role: 'Admin' | 'Ustadz' | 'Orang Tua';
+    user: UserInfo;
     theme?: 'light' | 'dark';
+    handleLogout: () => void;
+    openLoginModal: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu, role, theme = 'light' }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+    activeMenu, 
+    setActiveMenu, 
+    user, 
+    theme = 'light',
+    handleLogout,
+    openLoginModal
+}) => {
     const menus = [
-        { name: 'Beranda', icon: LayoutDashboard, roles: ['Admin', 'Ustadz', 'Orang Tua'] },
-        { name: 'Data Santri', icon: Users, roles: ['Admin'] },
-        { name: 'Pegawai', icon: UserCircle, roles: ['Admin'] },
-        { name: 'Akademik', icon: BookOpen, roles: ['Admin', 'Ustadz'] },
-        { name: 'Keuangan', icon: Wallet, roles: ['Admin'] },
-        { name: 'Pembangunan', icon: Building, roles: ['Admin'] },
-        { name: 'Laporan', icon: FileText, roles: ['Admin', 'Orang Tua'] },
+        { name: 'Beranda', icon: LayoutDashboard, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'Data Santri', icon: Users, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'Pegawai', icon: UserCircle, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'Akademik', icon: BookOpen, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'Keuangan', icon: Wallet, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'Pembangunan', icon: Building, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'Laporan', icon: FileText, roles: ['Admin', 'Pegawai', 'Tamu'] },
+        { name: 'WA Gateway', icon: MessageSquare, roles: ['Admin'] },
         { name: 'Pengaturan', icon: Settings, roles: ['Admin'] },
     ];
 
-    const filteredMenus = menus.filter(menu => menu.roles.includes(role));
+    const filteredMenus = menus.filter(menu => menu.roles.includes(user.role));
 
     return (
         <div className={cn(
-            "w-64 h-screen flex flex-col shadow-2xl fixed left-0 top-0 transition-all duration-500 z-50",
+            "w-64 h-screen flex flex-col shadow-2xl fixed left-0 top-0 transition-all duration-500 z-50 print:hidden",
             theme === 'dark' 
                 ? "bg-black border-r border-emerald-900/30 text-gray-300" 
                 : "bg-[#064E3B] border-r border-[#D4AF37]/30 text-white"
@@ -87,38 +100,70 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu, rol
                 "p-4 border-t transition-colors",
                 theme === 'dark' ? "border-emerald-900/20" : "border-[#D4AF37]/20"
             )}>
-                <div className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl border mb-4 transition-all",
-                    theme === 'dark'
-                        ? "bg-zinc-900/50 border-emerald-900/20"
-                        : "bg-black/20 border-[#D4AF37]/10"
-                )}>
-                    <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors",
-                        theme === 'dark'
-                            ? "bg-emerald-600 text-white"
-                            : "bg-[#D4AF37] text-[#064E3B]"
-                    )}>
-                        {role.charAt(0)}
+                {user.role === 'Tamu' ? (
+                    <div className="space-y-4">
+                        <div className="flex items-center space-x-3 px-4">
+                            <div className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm",
+                                theme === 'dark' ? "bg-zinc-800 text-gray-400" : "bg-emerald-800 text-[#D4AF37]"
+                            )}>
+                                TA
+                            </div>
+                            <div>
+                                <p className={cn("text-sm font-bold", theme === 'dark' ? "text-gray-200" : "text-white")}>Tamu</p>
+                                <p className="text-xs text-emerald-400">Viewer</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={openLoginModal}
+                            className={cn(
+                                "w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-white whitespace-nowrap",
+                                theme === 'dark'
+                                    ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20"
+                                    : "bg-[#10B981] hover:bg-[#059669] shadow-black/20"
+                            )}>
+                            <LogIn size={20} />
+                            <span>Login Admin / Pengurus</span>
+                        </button>
                     </div>
-                    <div className="flex-1 text-left">
-                        <p className={cn(
-                            "text-sm font-medium transition-colors",
-                            theme === 'dark' ? "text-gray-300" : "text-white"
-                        )}>{role}</p>
-                        <p className={cn(
-                            "text-xs transition-colors",
-                            theme === 'dark' ? "text-emerald-500/40" : "text-emerald-100/60"
-                        )}>Active Session</p>
-                    </div>
-                </div>
-                <button className={cn(
-                    "w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors",
-                    theme === 'dark' ? "text-gray-600 hover:text-red-400 hover:bg-red-400/5" : "text-emerald-100/60 hover:text-red-400 hover:bg-red-400/10"
-                )}>
-                    <LogOut size={18} />
-                    <span className="text-sm">Keluar</span>
-                </button>
+                ) : (
+                    <>
+                        <div className={cn(
+                            "flex items-center space-x-3 px-4 py-3 rounded-xl border mb-4 transition-all",
+                            theme === 'dark'
+                                ? "bg-zinc-900/50 border-emerald-900/20"
+                                : "bg-black/20 border-[#D4AF37]/10"
+                        )}>
+                            <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors",
+                                theme === 'dark'
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-[#D4AF37] text-[#064E3B]"
+                            )}>
+                                {user.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 text-left overflow-hidden">
+                                <p className={cn(
+                                    "text-sm font-medium transition-colors truncate",
+                                    theme === 'dark' ? "text-gray-300" : "text-white"
+                                )}>{user.name}</p>
+                                <p className={cn(
+                                    "text-[10px] transition-colors",
+                                    theme === 'dark' ? "text-emerald-500/40" : "text-emerald-100/60"
+                                )}>{user.role}</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={handleLogout}
+                            className={cn(
+                                "w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors",
+                                theme === 'dark' ? "text-gray-600 hover:text-red-400 hover:bg-red-400/5" : "text-emerald-100/60 hover:text-red-400 hover:bg-red-400/10"
+                            )}>
+                            <LogOut size={18} />
+                            <span className="text-sm font-medium">Keluar</span>
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );

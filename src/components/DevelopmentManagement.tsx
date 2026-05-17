@@ -19,10 +19,12 @@ import {
     PieChart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UserRole } from '../types';
 import { cn } from '../lib/utils';
 
 interface DevelopmentManagementProps {
     theme?: 'light' | 'dark';
+    role: UserRole;
 }
 
 const PROJECTS = [
@@ -77,7 +79,7 @@ const RECENT_REPORTS = [
     { id: 3, name: 'Rekapitulasi Keuangan Pembangunan Q1 2026', type: 'Excel', date: '28 Feb 2026', size: '1.2 MB' },
 ];
 
-export const DevelopmentManagement: React.FC<DevelopmentManagementProps> = ({ theme = 'light' }) => {
+export const DevelopmentManagement: React.FC<DevelopmentManagementProps> = ({ theme = 'light', role }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'finances' | 'reports'>('overview');
 
     const tabs = [
@@ -113,15 +115,17 @@ export const DevelopmentManagement: React.FC<DevelopmentManagementProps> = ({ th
                         <FileText size={18} />
                         <span className="text-sm font-medium">Unduh Laporan</span>
                     </button>
-                    <button className={cn(
-                        "flex items-center space-x-2 px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg",
-                        theme === 'dark'
-                            ? "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-900/20"
-                            : "bg-[#064E3B] text-white hover:bg-emerald-800 shadow-emerald-900/20"
-                    )}>
-                        <Plus size={18} />
-                        <span>Proyek Baru</span>
-                    </button>
+                    {role === 'Admin' && (
+                        <button className={cn(
+                            "flex items-center space-x-2 px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg",
+                            theme === 'dark'
+                                ? "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-900/20"
+                                : "bg-[#064E3B] text-white hover:bg-emerald-800 shadow-emerald-900/20"
+                        )}>
+                            <Plus size={18} />
+                            <span>Proyek Baru</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -340,9 +344,11 @@ export const DevelopmentManagement: React.FC<DevelopmentManagementProps> = ({ th
                                             <h4 className={cn("text-xl font-bold mb-1", theme === 'dark' ? "text-gray-100" : "text-gray-800")}>{project.name}</h4>
                                             <p className={cn("text-sm", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Pelaksana: {project.contractor}</p>
                                         </div>
-                                        <button className={cn("p-2 rounded-lg transition-colors", theme === 'dark' ? "text-gray-400 hover:bg-zinc-800" : "text-gray-400 hover:bg-gray-100")}>
-                                            <MoreVertical size={20} />
-                                        </button>
+                                        {role !== 'Tamu' && (
+                                            <button className={cn("p-2 rounded-lg transition-colors", theme === 'dark' ? "text-gray-400 hover:bg-zinc-800" : "text-gray-400 hover:bg-gray-100")}>
+                                                <MoreVertical size={20} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 mb-6">

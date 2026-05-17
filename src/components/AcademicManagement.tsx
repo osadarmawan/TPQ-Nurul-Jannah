@@ -56,7 +56,9 @@ const RECENT_ASSESSMENTS = [
     { id: 4, nama: 'Farah Quinn', jilid: 'Al-Quran', materi: 'Juz 25', nilai: 'A', tanggal: '12 Mar 2026', ustadz: 'Ustadzah Fatimah' },
 ];
 
-export const AcademicManagement = () => {
+import { UserRole } from '../types';
+
+export const AcademicManagement = ({ theme, role }: { theme: 'light' | 'dark', role: UserRole }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'progress' | 'kurikulum' | 'ujian'>('overview');
 
     const tabs = [
@@ -79,10 +81,12 @@ export const AcademicManagement = () => {
                         <FileText size={18} />
                         <span className="text-sm font-medium">Laporan Akademik</span>
                     </button>
-                    <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
-                        <Plus size={18} />
-                        <span>Input Nilai Baru</span>
-                    </button>
+                    {(role === 'Admin' || role === 'Pegawai') && (
+                        <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
+                            <Plus size={18} />
+                            <span>Input Nilai Baru</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -223,7 +227,7 @@ export const AcademicManagement = () => {
                                             <th className="px-6 py-4">Nilai</th>
                                             <th className="px-6 py-4">Ustadz/ah</th>
                                             <th className="px-6 py-4">Tanggal</th>
-                                            <th className="px-6 py-4 text-right">Aksi</th>
+                                            {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
@@ -253,11 +257,13 @@ export const AcademicManagement = () => {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">{item.ustadz}</td>
                                                 <td className="px-6 py-4 text-sm text-gray-400">{item.tanggal}</td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <button className="p-2 text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-colors">
-                                                        <ArrowUpRight size={18} />
-                                                    </button>
-                                                </td>
+                                                {role !== 'Tamu' && (
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button className="p-2 text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-colors">
+                                                            <ArrowUpRight size={18} />
+                                                        </button>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>

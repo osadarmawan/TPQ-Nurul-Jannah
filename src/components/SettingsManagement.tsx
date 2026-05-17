@@ -15,7 +15,8 @@ import {
     Smartphone,
     Monitor,
     CheckCircle2,
-    Loader2
+    Loader2,
+    MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -230,61 +231,209 @@ export const SettingsManagement: React.FC<SettingsManagementProps> = ({ theme = 
 
                         {activeTab === 'profil' && (
                             <div className="space-y-8">
-                                <h3 className="text-lg font-bold text-gray-800 mb-6">Profil Lembaga</h3>
+                                <h3 className={cn("text-lg font-bold mb-6", theme === 'dark' ? "text-emerald-400" : "text-gray-800")}>Profil Lembaga</h3>
                                 <div className="flex items-center space-x-6 mb-8">
-                                    <div className="w-24 h-24 rounded-3xl bg-emerald-100 flex items-center justify-center text-emerald-600 border-4 border-white shadow-lg">
+                                    <div className={cn("w-24 h-24 rounded-3xl flex items-center justify-center border-4 shadow-lg", theme === 'dark' ? "bg-emerald-900/30 text-emerald-400 border-zinc-800" : "bg-emerald-100 text-emerald-600 border-white")}>
                                         <Globe size={40} />
                                     </div>
                                     <div>
-                                        <button className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors">Ganti Logo</button>
-                                        <p className="text-[10px] text-gray-400 mt-2">Format: PNG, JPG. Maks 2MB.</p>
+                                        <button className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors", theme === 'dark' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white")}>Ganti Logo</button>
+                                        <p className={cn("text-[10px] mt-2", theme === 'dark' ? "text-gray-500" : "text-gray-400")}>Format: PNG, JPG. Maks 2MB.</p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nama TPQ</label>
-                                        <input type="text" defaultValue="TPQ Nurul Jannah" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                        <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Nama TPQ</label>
+                                        <input type="text" defaultValue="TPQ Nurul Jannah" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Alamat Lengkap</label>
-                                        <textarea className="w-full h-24 px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-none" defaultValue="Jl. Abimanyu 1 [Blok L], Perum. Puri Nirwana Residence"></textarea>
+                                        <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Alamat Lengkap</label>
+                                        <textarea className={cn("w-full h-24 px-4 py-2.5 rounded-xl border outline-none transition-all resize-none", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} defaultValue="Jl. Abimanyu 1 [Blok L], Perum. Puri Nirwana Residence"></textarea>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">RT</label>
-                                            <input type="text" defaultValue="014" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>RT</label>
+                                            <input type="text" defaultValue="014" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">RW</label>
-                                            <input type="text" defaultValue="008" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>RW</label>
+                                            <input type="text" defaultValue="008" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                         <div className="md:col-span-2 space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Desa / Kelurahan</label>
-                                            <input type="text" defaultValue="Sukaraya" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Desa / Kelurahan</label>
+                                            <input type="text" defaultValue="Sukaraya" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Kecamatan</label>
-                                            <input type="text" defaultValue="Karang Bahagia" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Kecamatan</label>
+                                            <input type="text" defaultValue="Karang Bahagia" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Kota / Kabupaten</label>
-                                            <input type="text" defaultValue="Kab.Bekasi" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Kota / Kabupaten</label>
+                                            <input type="text" defaultValue="Kab.Bekasi" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Provinsi</label>
-                                            <input type="text" defaultValue="Jawa Barat" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Provinsi</label>
+                                            <input type="text" defaultValue="Jawa Barat" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Email Lembaga</label>
-                                            <input type="email" defaultValue="" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Email Lembaga</label>
+                                            <input type="email" defaultValue="" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Telepon</label>
-                                            <input type="text" defaultValue="" className="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-400")}>Telepon</label>
+                                            <input type="text" defaultValue="" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none transition-all", theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500")} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'keamanan' && (
+                            <div className="space-y-8">
+                                <h3 className={cn("text-lg font-bold mb-6", theme === 'dark' ? "text-emerald-400" : "text-gray-800")}>Keamanan Akun & Sistem</h3>
+                                
+                                <div className="space-y-6">
+                                    <h4 className={cn("text-sm font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Ubah Kata Sandi</h4>
+                                    <div className="grid grid-cols-1 gap-6">
+                                        <div className="space-y-2">
+                                            <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Kata Sandi Saat Ini</label>
+                                            <div className="relative">
+                                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                <input type="password" placeholder="••••••••" className={cn(
+                                                    "w-full pl-12 pr-4 py-2.5 rounded-xl border outline-none transition-all",
+                                                    theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                                )} />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Kata Sandi Baru</label>
+                                                <div className="relative">
+                                                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                    <input type="password" placeholder="••••••••" className={cn(
+                                                        "w-full pl-12 pr-4 py-2.5 rounded-xl border outline-none transition-all",
+                                                        theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                                    )} />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className={cn("text-xs font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Konfirmasi Kata Sandi Baru</label>
+                                                <div className="relative">
+                                                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                    <input type="password" placeholder="••••••••" className={cn(
+                                                        "w-full pl-12 pr-4 py-2.5 rounded-xl border outline-none transition-all",
+                                                        theme === 'dark' ? "bg-zinc-900 border-zinc-800 text-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500/50" : "bg-white border-gray-100 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                                    )} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={cn("pt-8 border-t", theme === 'dark' ? "border-zinc-800" : "border-gray-50")}>
+                                    <h4 className={cn("text-sm font-bold uppercase tracking-widest mb-6", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Autentikasi Dua Faktor (2FA)</h4>
+                                    <div className={cn("p-6 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4", theme === 'dark' ? "bg-zinc-900/50 border-zinc-800" : "bg-gray-50 border-gray-100")}>
+                                        <div>
+                                            <p className={cn("text-sm font-bold", theme === 'dark' ? "text-gray-200" : "text-gray-800")}>Amankan akun Anda dengan 2FA</p>
+                                            <p className={cn("text-xs mt-1", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Tambahkan lapisan keamanan ekstra menggunakan aplikasi authenticator seperti Google Authenticator.</p>
+                                        </div>
+                                        <button className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap", theme === 'dark' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#064E3B] hover:bg-emerald-800 text-white")}>
+                                            Aktifkan 2FA
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className={cn("pt-8 border-t", theme === 'dark' ? "border-zinc-800" : "border-gray-50")}>
+                                    <h4 className={cn("text-sm font-bold uppercase tracking-widest mb-6", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>Sesi Aktif</h4>
+                                    <div className="space-y-4">
+                                        {[
+                                            { device: 'MacBook Pro - Chrome', location: 'Bekasi, Indonesia', time: 'Sedang aktif', current: true },
+                                            { device: 'iPhone 13 - Safari', location: 'Jakarta, Indonesia', time: '2 jam yang lalu', current: false }
+                                        ].map((session, i) => (
+                                            <div key={i} className={cn("p-4 rounded-xl border flex items-center justify-between", theme === 'dark' ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-100")}>
+                                                <div className="flex items-center space-x-4">
+                                                    <div className={cn("p-2 rounded-lg", theme === 'dark' ? "bg-zinc-800 text-gray-400" : "bg-gray-50 text-gray-500")}>
+                                                        {session.device.includes('iPhone') ? <Smartphone size={20} /> : <Monitor size={20} />}
+                                                    </div>
+                                                    <div>
+                                                        <p className={cn("text-sm font-bold", theme === 'dark' ? "text-gray-200" : "text-gray-800")}>{session.device}</p>
+                                                        <p className={cn("text-xs", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>{session.location} • {session.time}</p>
+                                                    </div>
+                                                </div>
+                                                {session.current ? (
+                                                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-full">Saat Ini</span>
+                                                ) : (
+                                                    <button className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors">Logout</button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'notifikasi' && (
+                            <div className="space-y-8">
+                                <h3 className={cn("text-lg font-bold mb-6", theme === 'dark' ? "text-emerald-400" : "text-gray-800")}>Preferensi Notifikasi</h3>
+                                
+                                <div className="space-y-6">
+                                    <div className={cn("p-6 rounded-2xl border", theme === 'dark' ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-gray-100")}>
+                                        <div className="flex items-center space-x-3 mb-6">
+                                            <div className={cn("p-2 rounded-lg", theme === 'dark' ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-600")}>
+                                                <MessageSquare size={20} />
+                                            </div>
+                                            <h4 className={cn("text-sm font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-300" : "text-gray-700")}>Notifikasi WhatsApp</h4>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {[
+                                                { label: 'Pengingat Pembayaran SPP', desc: 'Kirim pesan otomatis H-3 sebelum jatuh tempo', defaultChecked: true },
+                                                { label: 'Laporan Kehadiran Santri', desc: 'Kirim rekap kehadiran mingguan ke orang tua', defaultChecked: true },
+                                                { label: 'Pengumuman Lembaga', desc: 'Broadcast informasi penting ke semua wali santri', defaultChecked: true }
+                                            ].map((item, i) => (
+                                                <label key={i} className="flex items-start space-x-3 cursor-pointer group">
+                                                    <div className="relative flex items-center justify-center mt-1">
+                                                        <input type="checkbox" defaultChecked={item.defaultChecked} className="peer sr-only" />
+                                                        <div className={cn("w-10 h-5 rounded-full transition-colors peer-checked:bg-emerald-500", theme === 'dark' ? "bg-zinc-700" : "bg-gray-200")}></div>
+                                                        <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                                                    </div>
+                                                    <div>
+                                                        <p className={cn("text-sm font-bold", theme === 'dark' ? "text-gray-200" : "text-gray-800")}>{item.label}</p>
+                                                        <p className={cn("text-xs", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>{item.desc}</p>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className={cn("p-6 rounded-2xl border", theme === 'dark' ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-gray-100")}>
+                                        <div className="flex items-center space-x-3 mb-6">
+                                            <div className={cn("p-2 rounded-lg", theme === 'dark' ? "bg-blue-900/30 text-blue-400" : "bg-blue-50 text-blue-600")}>
+                                                <Mail size={20} />
+                                            </div>
+                                            <h4 className={cn("text-sm font-bold uppercase tracking-widest", theme === 'dark' ? "text-gray-300" : "text-gray-700")}>Notifikasi Email</h4>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {[
+                                                { label: 'Laporan Keuangan Bulanan', desc: 'Kirim rekap keuangan ke email admin', defaultChecked: true },
+                                                { label: 'Aktivitas Login Baru', desc: 'Peringatan jika ada login dari perangkat baru', defaultChecked: true },
+                                                { label: 'Backup Database', desc: 'Laporan status backup otomatis', defaultChecked: false }
+                                            ].map((item, i) => (
+                                                <label key={i} className="flex items-start space-x-3 cursor-pointer group">
+                                                    <div className="relative flex items-center justify-center mt-1">
+                                                        <input type="checkbox" defaultChecked={item.defaultChecked} className="peer sr-only" />
+                                                        <div className={cn("w-10 h-5 rounded-full transition-colors peer-checked:bg-blue-500", theme === 'dark' ? "bg-zinc-700" : "bg-gray-200")}></div>
+                                                        <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                                                    </div>
+                                                    <div>
+                                                        <p className={cn("text-sm font-bold", theme === 'dark' ? "text-gray-200" : "text-gray-800")}>{item.label}</p>
+                                                        <p className={cn("text-xs", theme === 'dark' ? "text-gray-400" : "text-gray-500")}>{item.desc}</p>
+                                                    </div>
+                                                </label>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -293,26 +442,26 @@ export const SettingsManagement: React.FC<SettingsManagementProps> = ({ theme = 
 
                         {activeTab === 'database' && (
                             <div className="space-y-8">
-                                <h3 className="text-lg font-bold text-gray-800 mb-6">Manajemen Data</h3>
-                                <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-between">
+                                <h3 className={cn("text-lg font-bold mb-6", theme === 'dark' ? "text-emerald-400" : "text-gray-800")}>Manajemen Data</h3>
+                                <div className={cn("p-6 rounded-2xl border flex items-center justify-between", theme === 'dark' ? "bg-blue-900/10 border-blue-900/30" : "bg-blue-50 border-blue-100")}>
                                     <div className="flex items-center space-x-4">
-                                        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", theme === 'dark' ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600")}>
                                             <Cloud size={24} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-blue-900">Backup Cloud Otomatis</p>
-                                            <p className="text-xs text-blue-600">Terakhir dibackup: 2 jam yang lalu</p>
+                                            <p className={cn("text-sm font-bold", theme === 'dark' ? "text-blue-400" : "text-blue-900")}>Backup Cloud Otomatis</p>
+                                            <p className={cn("text-xs", theme === 'dark' ? "text-blue-500/70" : "text-blue-600")}>Terakhir dibackup: 2 jam yang lalu</p>
                                         </div>
                                     </div>
                                     <button className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors">Backup Sekarang</button>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h4 className="text-sm font-bold text-gray-700">Tindakan Berbahaya</h4>
-                                    <div className="p-6 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-between">
+                                    <h4 className={cn("text-sm font-bold", theme === 'dark' ? "text-gray-400" : "text-gray-700")}>Tindakan Berbahaya</h4>
+                                    <div className={cn("p-6 rounded-2xl border flex items-center justify-between", theme === 'dark' ? "bg-red-900/10 border-red-900/30" : "bg-red-50 border-red-100")}>
                                         <div>
-                                            <p className="text-sm font-bold text-red-900">Reset Semua Data</p>
-                                            <p className="text-xs text-red-600">Menghapus semua data santri, akademik, dan keuangan.</p>
+                                            <p className={cn("text-sm font-bold", theme === 'dark' ? "text-red-400" : "text-red-900")}>Reset Semua Data</p>
+                                            <p className={cn("text-xs", theme === 'dark' ? "text-red-500/70" : "text-red-600")}>Menghapus semua data santri, akademik, dan keuangan.</p>
                                         </div>
                                         <button className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2">
                                             <Trash2 size={14} />

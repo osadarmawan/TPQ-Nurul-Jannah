@@ -100,6 +100,18 @@ export const SantriModal: React.FC<SantriModalProps> = ({ isOpen, onClose, mode,
                                         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
                                     />
                                 </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center">
+                                        <Phone size={14} className="mr-1.5 text-[#D4AF37]" /> Nomor WhatsApp
+                                    </label>
+                                    <input 
+                                        type="tel" 
+                                        defaultValue={initialData?.whatsapp || ''}
+                                        placeholder="Contoh: 081234567890"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] outline-none transition-all"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1">Gunakan format angka, contoh: 0812...</p>
+                                </div>
                             </div>
                         </div>
 
@@ -134,6 +146,7 @@ export const SantriDetailModal: React.FC<{ isOpen: boolean; onClose: () => void;
         { label: 'Status', value: data.status, icon: UserCircle },
         { label: 'Jilid', value: data.jilid, icon: BookOpen },
         { label: 'Orang Tua', value: data.ortu, icon: Users },
+        { label: 'No. WhatsApp', value: data.whatsapp || '-', icon: Phone },
         { label: 'Gender', value: data.gender, icon: User },
         { label: 'Tanggal Daftar', value: data.tglDaftar, icon: Save },
     ];

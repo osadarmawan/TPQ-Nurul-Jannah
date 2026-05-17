@@ -19,10 +19,12 @@ import {
     UserX,
     Printer,
     MessageSquare,
-    History
+    History,
+    ArrowUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { UserRole } from '../types';
 import { SantriModal, ConfirmModal, SantriDetailModal, SantriIDCardModal, SantriWAModal, SantriAcademicHistoryModal } from './Modals';
 
 const SANTRI_DATA = [
@@ -36,7 +38,7 @@ const SANTRI_DATA = [
     { id: 8, nama: 'Gading Marten', nis: '2024003', status: 'Calon', jilid: '1', ortu: 'Roy Marten', gender: 'Laki-laki', tglDaftar: '2024-03-10' },
 ];
 
-export const SantriManagement = () => {
+export const SantriManagement = ({ theme, role }: { theme: 'light' | 'dark', role: UserRole }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,16 +52,51 @@ export const SantriManagement = () => {
     const [selectedSantri, setSelectedSantri] = useState<any>(null);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
 
+    // New state for filters and pagination
+    const [statusFilter, setStatusFilter] = useState<string>('Semua');
+    const [genderFilter, setGenderFilter] = useState<string>('Semua');
+    const [itemsPerPage, setItemsPerPage] = useState<number | 'Semua'>(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+
+    React.useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 300) {
+                setShowScrollTop(true);
+            } else {
+                setShowScrollTop(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const filteredData = useMemo(() => {
         return SANTRI_DATA.filter(santri => {
             const searchLower = searchTerm.toLowerCase();
-            return (
-                santri.nama.toLowerCase().includes(searchLower) ||
+            const matchesSearch = santri.nama.toLowerCase().includes(searchLower) ||
                 santri.nis.toLowerCase().includes(searchLower) ||
-                santri.ortu.toLowerCase().includes(searchLower)
-            );
+                santri.ortu.toLowerCase().includes(searchLower);
+            
+            const matchesStatus = statusFilter === 'Semua' || santri.status === statusFilter;
+            const matchesGender = genderFilter === 'Semua' || santri.gender === genderFilter;
+
+            return matchesSearch && matchesStatus && matchesGender;
         });
-    }, [searchTerm]);
+    }, [searchTerm, statusFilter, genderFilter]);
+
+    const paginatedData = useMemo(() => {
+        if (itemsPerPage === 'Semua') return filteredData;
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredData.slice(start, start + itemsPerPage);
+    }, [filteredData, currentPage, itemsPerPage]);
+
+    const totalPages = itemsPerPage === 'Semua' ? 1 : Math.ceil(filteredData.length / itemsPerPage);
 
     const stats = [
         { label: 'Total Santri', value: '128', icon: Users, color: 'bg-blue-500' },
@@ -158,15 +195,20 @@ export const SantriManagement = () => {
                                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                             className="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-30 p-3"
                                         >
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase px-2 py-1 mb-2">Filter Berdasarkan</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase px-2 py-1 mb-1">Status</p>
                                             <div className="space-y-1">
-                                                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors">Semua Santri</button>
-                                                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors">Siswa Aktif</button>
-                                                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors">Calon Santri</button>
-                                                <div className="h-px bg-gray-100 my-2"></div>
-                                                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors">Jilid 1-3</button>
-                                                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors">Jilid 4-6</button>
-                                                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors">Al-Quran</button>
+                                                <button onClick={() => setStatusFilter('Semua')} className={cn("w-full text-left px-3 py-2 text-sm rounded-lg transition-colors", statusFilter === 'Semua' ? "bg-emerald-50 text-emerald-700 font-medium" : "text-gray-700 hover:bg-gray-50")}>Semua Status</button>
+                                                <button onClick={() => setStatusFilter('Siswa')} className={cn("w-full text-left px-3 py-2 text-sm rounded-lg transition-colors", statusFilter === 'Siswa' ? "bg-emerald-50 text-emerald-700 font-medium" : "text-gray-700 hover:bg-gray-50")}>Siswa Aktif</button>
+                                                <button onClick={() => setStatusFilter('Calon')} className={cn("w-full text-left px-3 py-2 text-sm rounded-lg transition-colors", statusFilter === 'Calon' ? "bg-emerald-50 text-emerald-700 font-medium" : "text-gray-700 hover:bg-gray-50")}>Calon Santri</button>
+                                            </div>
+                                            
+                                            <div className="h-px bg-gray-100 my-2"></div>
+                                            
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase px-2 py-1 mb-1">Gender</p>
+                                            <div className="space-y-1">
+                                                <button onClick={() => setGenderFilter('Semua')} className={cn("w-full text-left px-3 py-2 text-sm rounded-lg transition-colors", genderFilter === 'Semua' ? "bg-emerald-50 text-emerald-700 font-medium" : "text-gray-700 hover:bg-gray-50")}>Semua Gender</button>
+                                                <button onClick={() => setGenderFilter('Laki-laki')} className={cn("w-full text-left px-3 py-2 text-sm rounded-lg transition-colors", genderFilter === 'Laki-laki' ? "bg-emerald-50 text-emerald-700 font-medium" : "text-gray-700 hover:bg-gray-50")}>Laki-laki</button>
+                                                <button onClick={() => setGenderFilter('Perempuan')} className={cn("w-full text-left px-3 py-2 text-sm rounded-lg transition-colors", genderFilter === 'Perempuan' ? "bg-emerald-50 text-emerald-700 font-medium" : "text-gray-700 hover:bg-gray-50")}>Perempuan</button>
                                             </div>
                                         </motion.div>
                                     )}
@@ -178,13 +220,15 @@ export const SantriManagement = () => {
                                 <Download size={18} />
                                 <span className="text-sm font-medium">Export</span>
                             </button>
-                            <button 
-                                onClick={() => { setModalMode('add'); setSelectedSantri(null); setIsModalOpen(true); }}
-                                className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all"
-                            >
-                                <UserPlus size={18} />
-                                <span>Tambah Santri</span>
-                            </button>
+                            {role === 'Admin' && (
+                                <button 
+                                    onClick={() => { setModalMode('add'); setSelectedSantri(null); setIsModalOpen(true); }}
+                                    className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all"
+                                >
+                                    <UserPlus size={18} />
+                                    <span>Tambah Santri</span>
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -231,12 +275,12 @@ export const SantriManagement = () => {
                                 <th className="px-6 py-4">Jilid</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Orang Tua</th>
-                                <th className="px-6 py-4 text-right">Aksi</th>
+                                {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredData.length > 0 ? (
-                                filteredData.map((santri) => (
+                            {paginatedData.length > 0 ? (
+                                paginatedData.map((santri) => (
                                     <tr key={santri.id} className={cn(
                                         "group transition-colors",
                                         selectedIds.includes(santri.id) ? "bg-emerald-50/30" : "hover:bg-gray-50/50"
@@ -278,70 +322,76 @@ export const SantriManagement = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">{santri.ortu}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end space-x-1">
-                                                <button 
-                                                    onClick={() => handleView(santri)}
-                                                    className="p-2 text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-all"
-                                                >
-                                                    <Eye size={16} />
-                                                </button>
-                                                <button onClick={() => handleEdit(santri)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button onClick={() => handleDelete(santri)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                                <div 
-                                                    className="relative"
-                                                >
+                                        {role !== 'Tamu' && (
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end space-x-1">
                                                     <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setActiveActionMenu(activeActionMenu === santri.id ? null : santri.id);
-                                                        }}
-                                                        className={cn(
-                                                            "p-2 rounded-lg transition-all",
-                                                            activeActionMenu === santri.id ? "bg-gray-100 text-gray-900 shadow-inner" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                                        )}
+                                                        onClick={() => handleView(santri)}
+                                                        className="p-2 text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 rounded-lg transition-all"
                                                     >
-                                                        <MoreHorizontal size={16} />
+                                                        <Eye size={16} />
                                                     </button>
-                                                    <AnimatePresence>
-                                                        {activeActionMenu === santri.id && (
-                                                            <motion.div 
-                                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                                className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 z-[50] p-1"
-                                                            >
-                                                                <button 
-                                                                    onClick={() => { setSelectedSantri(santri); setIsIDCardOpen(true); setActiveActionMenu(null); }}
-                                                                    className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors flex items-center space-x-2"
+                                                    {(role === 'Admin' || role === 'Pegawai') && (
+                                                        <>
+                                                            <button onClick={() => handleEdit(santri)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(santri)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <div 
+                                                        className="relative"
+                                                    >
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setActiveActionMenu(activeActionMenu === santri.id ? null : santri.id);
+                                                            }}
+                                                            className={cn(
+                                                                "p-2 rounded-lg transition-all",
+                                                                activeActionMenu === santri.id ? "bg-gray-100 text-gray-900 shadow-inner" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                                            )}
+                                                        >
+                                                            <MoreHorizontal size={16} />
+                                                        </button>
+                                                        <AnimatePresence>
+                                                            {activeActionMenu === santri.id && (
+                                                                <motion.div 
+                                                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                    className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 z-[50] p-1"
                                                                 >
-                                                                    <Printer size={14} className="text-emerald-600" />
-                                                                    <span>Cetak Kartu</span>
-                                                                </button>
-                                                                <button 
-                                                                    onClick={() => { setSelectedSantri(santri); setIsWAOpen(true); setActiveActionMenu(null); }}
-                                                                    className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors flex items-center space-x-2"
-                                                                >
-                                                                    <MessageSquare size={14} className="text-emerald-600" />
-                                                                    <span>Kirim WA Ortu</span>
-                                                                </button>
-                                                                <button 
-                                                                    onClick={() => { setSelectedSantri(santri); setIsAcademicHistoryOpen(true); setActiveActionMenu(null); }}
-                                                                    className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors flex items-center space-x-2"
-                                                                >
-                                                                    <History size={14} className="text-emerald-600" />
-                                                                    <span>Riwayat Akademik</span>
-                                                                </button>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
+                                                                    <button 
+                                                                        onClick={() => { setSelectedSantri(santri); setIsIDCardOpen(true); setActiveActionMenu(null); }}
+                                                                        className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors flex items-center space-x-2"
+                                                                    >
+                                                                        <Printer size={14} className="text-emerald-600" />
+                                                                        <span>Cetak Kartu</span>
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => { setSelectedSantri(santri); setIsWAOpen(true); setActiveActionMenu(null); }}
+                                                                        className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors flex items-center space-x-2"
+                                                                    >
+                                                                        <MessageSquare size={14} className="text-emerald-600" />
+                                                                        <span>Kirim WA Ortu</span>
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => { setSelectedSantri(santri); setIsAcademicHistoryOpen(true); setActiveActionMenu(null); }}
+                                                                        className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 rounded-lg transition-colors flex items-center space-x-2"
+                                                                    >
+                                                                        <History size={14} className="text-emerald-600" />
+                                                                        <span>Riwayat Akademik</span>
+                                                                    </button>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             ) : (
@@ -374,33 +424,92 @@ export const SantriManagement = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="p-6 border-t border-gray-100 flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
-                        Menampilkan <span className="font-bold text-gray-800">{filteredData.length > 0 ? `1-${filteredData.length}` : '0'}</span> dari <span className="font-bold text-gray-800">{filteredData.length}</span> santri
-                    </p>
-                    <div className="flex items-center space-x-2">
-                        <button className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors">
-                            <ChevronLeft size={20} />
-                        </button>
-                        {[1, 2, 3, '...', 16].map((p, i) => (
-                            <button 
-                                key={i}
-                                className={cn(
-                                    "w-10 h-10 rounded-xl text-sm font-bold transition-all",
-                                    p === 1 
-                                        ? "bg-[#064E3B] text-white shadow-lg shadow-emerald-900/20" 
-                                        : "text-gray-500 hover:bg-gray-50"
-                                )}
-                            >
-                                {p}
-                            </button>
-                        ))}
-                        <button className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
-                            <ChevronRight size={20} />
-                        </button>
+                <div className="p-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center space-x-4">
+                        <p className="text-sm text-gray-500">
+                            Menampilkan <span className="font-bold text-gray-800">
+                                {filteredData.length > 0 ? `${itemsPerPage === 'Semua' ? 1 : (currentPage - 1) * (itemsPerPage as number) + 1}-${itemsPerPage === 'Semua' ? filteredData.length : Math.min(currentPage * (itemsPerPage as number), filteredData.length)}` : '0'}
+                            </span> dari <span className="font-bold text-gray-800">{filteredData.length}</span> santri
+                        </p>
+                        <select 
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                                setItemsPerPage(e.target.value === 'Semua' ? 'Semua' : Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                        >
+                            <option value={10}>10 per halaman</option>
+                            <option value={50}>50 per halaman</option>
+                            <option value={100}>100 per halaman</option>
+                            <option value={500}>500 per halaman</option>
+                            <option value="Semua">Semua</option>
+                        </select>
                     </div>
+                    
+                    {itemsPerPage !== 'Semua' && totalPages > 1 && (
+                        <div className="flex items-center space-x-2">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            
+                            {/* Simple pagination display */}
+                            <div className="flex items-center space-x-1">
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    // Show pages around current page
+                                    let pageNum = i + 1;
+                                    if (totalPages > 5 && currentPage > 3) {
+                                        pageNum = currentPage - 2 + i;
+                                        if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                                    }
+                                    
+                                    return (
+                                        <button 
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={cn(
+                                                "w-10 h-10 rounded-xl text-sm font-bold transition-all",
+                                                currentPage === pageNum 
+                                                    ? "bg-[#064E3B] text-white shadow-lg shadow-emerald-900/20" 
+                                                    : "text-gray-500 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </motion.div>
+
+            {/* Scroll to Top Button */}
+            <AnimatePresence>
+                {showScrollTop && (
+                    <motion.button
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        onClick={scrollToTop}
+                        className="fixed bottom-8 right-8 p-4 bg-[#064E3B] text-white rounded-full shadow-2xl hover:bg-emerald-800 transition-colors z-50 flex items-center justify-center"
+                    >
+                        <ArrowUp size={24} />
+                    </motion.button>
+                )}
+            </AnimatePresence>
 
             {/* Modals */}
             <SantriModal 

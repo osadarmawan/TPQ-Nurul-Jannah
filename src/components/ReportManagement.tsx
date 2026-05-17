@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
     FileText, 
     Users, 
@@ -15,10 +15,16 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { UserRole } from '../types';
+import { SantriReportView, AcademicReportView, FinanceReportView, StaffReportView } from './ReportViews';
 
-export const ReportManagement = () => {
+export const ReportManagement = ({ theme = 'light', role }: { theme?: 'light' | 'dark', role: UserRole }) => {
+    const [activeReport, setActiveReport] = useState<string | null>(null);
+    const isDark = theme === 'dark';
+
     const reportCards = [
         { 
+            id: 'santri',
             title: 'Laporan Santri', 
             desc: 'Data pertumbuhan, demografi, dan status keaktifan santri.',
             icon: Users,
@@ -26,6 +32,7 @@ export const ReportManagement = () => {
             stats: 'Total 156 Santri'
         },
         { 
+            id: 'akademik',
             title: 'Laporan Akademik', 
             desc: 'Rekapitulasi nilai, progress jilid, dan tingkat kelulusan.',
             icon: BookOpen,
@@ -33,6 +40,7 @@ export const ReportManagement = () => {
             stats: '85% Lulus Target'
         },
         { 
+            id: 'keuangan',
             title: 'Laporan Keuangan', 
             desc: 'Ringkasan pemasukan, pengeluaran, dan tunggakan SPP.',
             icon: DollarSign,
@@ -40,6 +48,7 @@ export const ReportManagement = () => {
             stats: 'Saldo Rp 45.2M'
         },
         { 
+            id: 'pegawai',
             title: 'Laporan Pegawai', 
             desc: 'Kehadiran staf, kinerja pengajar, dan rekap payroll.',
             icon: Award,
@@ -48,18 +57,23 @@ export const ReportManagement = () => {
         }
     ];
 
+    if (activeReport === 'santri') return <SantriReportView onBack={() => setActiveReport(null)} theme={theme} />;
+    if (activeReport === 'akademik') return <AcademicReportView onBack={() => setActiveReport(null)} theme={theme} />;
+    if (activeReport === 'keuangan') return <FinanceReportView onBack={() => setActiveReport(null)} theme={theme} />;
+    if (activeReport === 'pegawai') return <StaffReportView onBack={() => setActiveReport(null)} theme={theme} />;
+
     return (
         <div className="space-y-8 pb-12">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-[#064E3B] tracking-tight">Pusat Laporan</h2>
-                    <p className="text-gray-500 mt-1">Analisis data komprehensif untuk pengambilan keputusan yang lebih baik.</p>
+                    <h2 className={cn("text-3xl font-bold tracking-tight", isDark ? "text-emerald-400" : "text-[#064E3B]")}>Pusat Laporan</h2>
+                    <p className={cn("mt-1", isDark ? "text-gray-400" : "text-gray-500")}>Analisis data komprehensif untuk pengambilan keputusan yang lebih baik.</p>
                 </div>
                 <div className="flex items-center space-x-3">
-                    <div className="bg-white px-4 py-2 rounded-xl border border-gray-200 flex items-center space-x-2">
+                    <div className={cn("px-4 py-2 rounded-xl border flex items-center space-x-2", isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200")}>
                         <Calendar size={18} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-600">Jan 2024 - Mar 2024</span>
+                        <span className={cn("text-sm font-medium", isDark ? "text-gray-300" : "text-gray-600")}>Jan 2024 - Mar 2024</span>
                     </div>
                     <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
                         <Download size={18} />
@@ -73,10 +87,16 @@ export const ReportManagement = () => {
                 {reportCards.map((report, i) => (
                     <motion.div
                         key={i}
+                        onClick={() => setActiveReport(report.id)}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-100 transition-all group cursor-pointer"
+                        className={cn(
+                            "rounded-3xl p-8 shadow-sm border transition-all group cursor-pointer",
+                            isDark 
+                                ? "bg-gray-800 border-gray-700 hover:border-emerald-500/50 hover:bg-gray-800/80" 
+                                : "bg-white border-gray-100 hover:shadow-xl hover:border-emerald-100"
+                        )}
                     >
                         <div className="flex items-start justify-between mb-6">
                             <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg", report.color)}>
@@ -84,14 +104,14 @@ export const ReportManagement = () => {
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase">Terupdate</span>
+                                <span className={cn("px-3 py-1 rounded-full text-[10px] font-bold uppercase", isDark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-600")}>Terupdate</span>
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{report.title}</h3>
-                        <p className="text-sm text-gray-500 mb-6 leading-relaxed">{report.desc}</p>
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                        <h3 className={cn("text-xl font-bold mb-2", isDark ? "text-gray-100" : "text-gray-900")}>{report.title}</h3>
+                        <p className={cn("text-sm mb-6 leading-relaxed", isDark ? "text-gray-400" : "text-gray-500")}>{report.desc}</p>
+                        <div className={cn("flex items-center justify-between pt-6 border-t", isDark ? "border-gray-700" : "border-gray-50")}>
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{report.stats}</span>
-                            <div className="flex items-center text-[#064E3B] font-bold text-sm group-hover:translate-x-1 transition-transform">
+                            <div className={cn("flex items-center font-bold text-sm group-hover:translate-x-1 transition-transform", isDark ? "text-emerald-400" : "text-[#064E3B]")}>
                                 <span>Buka Laporan</span>
                                 <ChevronRight size={18} className="ml-1" />
                             </div>
@@ -101,9 +121,9 @@ export const ReportManagement = () => {
             </div>
 
             {/* Analytics Summary */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <div className={cn("rounded-3xl p-8 shadow-sm border", isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100")}>
                 <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                    <h3 className={cn("text-lg font-bold flex items-center", isDark ? "text-gray-100" : "text-gray-800")}>
                         <Activity className="mr-2 text-[#D4AF37]" size={20} />
                         Ringkasan Performa TPQ
                     </h3>
@@ -112,28 +132,28 @@ export const ReportManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">Pertumbuhan Santri</span>
-                            <span className="text-sm font-bold text-emerald-600">+15%</span>
+                            <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-500")}>Pertumbuhan Santri</span>
+                            <span className="text-sm font-bold text-emerald-500">+15%</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div className={cn("h-2 w-full rounded-full overflow-hidden", isDark ? "bg-gray-700" : "bg-gray-100")}>
                             <div className="h-full bg-emerald-500 w-[75%] rounded-full"></div>
                         </div>
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">Tingkat Kelulusan</span>
-                            <span className="text-sm font-bold text-blue-600">92%</span>
+                            <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-500")}>Tingkat Kelulusan</span>
+                            <span className="text-sm font-bold text-blue-500">92%</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div className={cn("h-2 w-full rounded-full overflow-hidden", isDark ? "bg-gray-700" : "bg-gray-100")}>
                             <div className="h-full bg-blue-500 w-[92%] rounded-full"></div>
                         </div>
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">Kesehatan Keuangan</span>
-                            <span className="text-sm font-bold text-amber-600">Sangat Baik</span>
+                            <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-500")}>Kesehatan Keuangan</span>
+                            <span className="text-sm font-bold text-amber-500">Sangat Baik</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div className={cn("h-2 w-full rounded-full overflow-hidden", isDark ? "bg-gray-700" : "bg-gray-100")}>
                             <div className="h-full bg-amber-500 w-[85%] rounded-full"></div>
                         </div>
                     </div>

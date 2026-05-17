@@ -11,13 +11,15 @@ const MOCK_DATA = [
     { id: 5, nama: 'Dedi Corbuzier', nis: '2024002', status: 'Calon', jilid: 1, ortu: 'Corbuzier' },
 ];
 
+import { UserRole } from '../types';
 import { cn } from '../lib/utils';
 
 interface SantriTableProps {
     theme?: 'light' | 'dark';
+    role: UserRole;
 }
 
-export const SantriTable: React.FC<SantriTableProps> = ({ theme = 'light' }) => {
+export const SantriTable: React.FC<SantriTableProps> = ({ theme = 'light', role }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -134,17 +136,19 @@ export const SantriTable: React.FC<SantriTableProps> = ({ theme = 'light' }) => 
                             )}
                         </AnimatePresence>
                     </div>
-                    <button 
-                        onClick={handleAdd}
-                        className={cn(
-                            "px-5 py-2.5 rounded-xl font-medium transition-all transform hover:-translate-y-0.5",
-                            theme === 'dark'
-                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20"
-                                : "bg-gradient-to-r from-[#064E3B] to-emerald-800 text-white hover:shadow-lg hover:shadow-emerald-900/20"
-                        )}
-                    >
-                        + Tambah Santri
-                    </button>
+                    {(role === 'Admin' || role === 'Pegawai') && (
+                        <button 
+                            onClick={handleAdd}
+                            className={cn(
+                                "px-5 py-2.5 rounded-xl font-medium transition-all transform hover:-translate-y-0.5",
+                                theme === 'dark'
+                                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20"
+                                    : "bg-gradient-to-r from-[#064E3B] to-emerald-800 text-white hover:shadow-lg hover:shadow-emerald-900/20"
+                            )}
+                        >
+                            + Tambah Santri
+                        </button>
+                    )}
                 </div>
             </div>
             
@@ -162,7 +166,7 @@ export const SantriTable: React.FC<SantriTableProps> = ({ theme = 'light' }) => 
                             <th className="px-6 py-4 font-medium">Status</th>
                             <th className="px-6 py-4 font-medium">Jilid</th>
                             <th className="px-6 py-4 font-medium">Nama Ortu</th>
-                            <th className="px-6 py-4 font-medium text-right">Aksi</th>
+                            {role !== 'Tamu' && <th className="px-6 py-4 font-medium text-right">Aksi</th>}
                         </tr>
                     </thead>
                     <tbody className={cn(
@@ -230,34 +234,40 @@ export const SantriTable: React.FC<SantriTableProps> = ({ theme = 'light' }) => 
                                     "px-6 py-4 transition-colors",
                                     theme === 'dark' ? "text-gray-500" : "text-gray-600"
                                 )}>{item.ortu}</td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button 
-                                            onClick={() => handleEdit(item)}
-                                            className={cn(
-                                                "p-1.5 rounded-lg transition-colors",
-                                                theme === 'dark' ? "text-blue-400 hover:bg-blue-900/20" : "text-blue-600 hover:bg-blue-50"
+                                {role !== 'Tamu' && (
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {(role === 'Admin' || role === 'Pegawai') && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleEdit(item)}
+                                                        className={cn(
+                                                            "p-1.5 rounded-lg transition-colors",
+                                                            theme === 'dark' ? "text-blue-400 hover:bg-blue-900/20" : "text-blue-600 hover:bg-blue-50"
+                                                        )}
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteClick(item)}
+                                                        className={cn(
+                                                            "p-1.5 rounded-lg transition-colors",
+                                                            theme === 'dark' ? "text-red-400 hover:bg-red-900/20" : "text-red-600 hover:bg-red-50"
+                                                        )}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
                                             )}
-                                        >
-                                            <Edit size={16} />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDeleteClick(item)}
-                                            className={cn(
+                                            <button className={cn(
                                                 "p-1.5 rounded-lg transition-colors",
-                                                theme === 'dark' ? "text-red-400 hover:bg-red-900/20" : "text-red-600 hover:bg-red-50"
-                                            )}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                        <button className={cn(
-                                            "p-1.5 rounded-lg transition-colors",
-                                            theme === 'dark' ? "text-gray-600 hover:text-gray-400 hover:bg-zinc-800" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
-                                        )}>
-                                            <MoreVertical size={16} />
-                                        </button>
-                                    </div>
-                                </td>
+                                                theme === 'dark' ? "text-gray-600 hover:text-gray-400 hover:bg-zinc-800" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                                            )}>
+                                                <MoreVertical size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
                             </motion.tr>
                         ))}
                     </tbody>

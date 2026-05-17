@@ -14,9 +14,16 @@ import {
     PieChart as PieChartIcon,
     BarChart3,
     CreditCard,
-    ArrowRight
+    ArrowRight,
+    X,
+    Printer,
+    MessageSquare,
+    FileText,
+    CheckCircle2,
+    User,
+    Trash2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { 
     AreaChart, 
@@ -47,14 +54,39 @@ const CATEGORY_DATA = [
 ];
 
 const TRANSACTIONS = [
-    { id: 1, date: '2024-03-14', desc: 'Pembayaran SPP - Ahmad Fauzi', cat: 'SPP Santri', type: 'income', amount: '150.000' },
-    { id: 2, date: '2024-03-14', desc: 'Gaji Ustadz Mansur', cat: 'Gaji Pegawai', type: 'expense', amount: '3.500.000' },
-    { id: 3, date: '2024-03-13', desc: 'Donasi Hamba Allah', cat: 'Donasi', type: 'income', amount: '1.000.000' },
-    { id: 4, date: '2024-03-12', desc: 'Listrik & Air Maret', cat: 'Operasional', type: 'expense', amount: '450.000' },
-    { id: 5, date: '2024-03-12', desc: 'Pembelian Buku Iqra', cat: 'Sarana', type: 'expense', amount: '750.000' },
+    { id: 1, trxId: 'TRX-20240314-001', date: '2024-03-14', time: '09:30 WIB', desc: 'Pembayaran SPP - Ahmad Fauzi', cat: 'SPP Santri', type: 'income', amount: '150.000', method: 'Transfer BSI', cashier: 'Siti Aminah' },
+    { id: 2, trxId: 'TRX-20240314-002', date: '2024-03-14', time: '13:15 WIB', desc: 'Gaji Ustadz Mansur', cat: 'Gaji Pegawai', type: 'expense', amount: '3.500.000', method: 'Transfer BNI', cashier: 'Siti Aminah' },
+    { id: 3, trxId: 'TRX-20240313-001', date: '2024-03-13', time: '10:00 WIB', desc: 'Donasi Hamba Allah', cat: 'Donasi', type: 'income', amount: '1.000.000', method: 'Tunai', cashier: 'Ustadz Mansur' },
+    { id: 4, trxId: 'TRX-20240312-001', date: '2024-03-12', time: '08:45 WIB', desc: 'Listrik & Air Maret', cat: 'Operasional', type: 'expense', amount: '450.000', method: 'Transfer Mandiri', cashier: 'Siti Aminah' },
+    { id: 5, trxId: 'TRX-20240312-002', date: '2024-03-12', time: '11:20 WIB', desc: 'Pembelian Buku Iqra', cat: 'Sarana', type: 'expense', amount: '750.000', method: 'Tunai', cashier: 'Siti Aminah' },
 ];
 
-export const FinanceManagement = () => {
+import { UserRole } from '../types';
+
+export const FinanceManagement = ({ theme, role }: { theme: 'light' | 'dark', role: UserRole }) => {
+    const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedTransactionIds, setSelectedTransactionIds] = useState<number[]>([]);
+
+    const handleViewDetail = (transaction: any) => {
+        setSelectedTransaction(transaction);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedTransactionIds(TRANSACTIONS.map(t => t.id));
+        } else {
+            setSelectedTransactionIds([]);
+        }
+    };
+
+    const handleSelectTransaction = (id: number) => {
+        setSelectedTransactionIds(prev => 
+            prev.includes(id) ? prev.filter(trxId => trxId !== id) : [...prev, id]
+        );
+    };
+
     return (
         <div className="space-y-8 pb-12">
             {/* Header */}
@@ -68,10 +100,12 @@ export const FinanceManagement = () => {
                         <Download size={18} />
                         <span className="text-sm font-medium">Ekspor Laporan</span>
                     </button>
-                    <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
-                        <Plus size={18} />
-                        <span>Transaksi Baru</span>
-                    </button>
+                    {role === 'Admin' && (
+                        <button className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-medium hover:shadow-lg transition-all shadow-emerald-900/20">
+                            <Plus size={18} />
+                            <span>Transaksi Baru</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -196,6 +230,28 @@ export const FinanceManagement = () => {
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-gray-800">Transaksi Terakhir</h3>
                     <div className="flex items-center space-x-2">
+                        <AnimatePresence>
+                            {selectedTransactionIds.length > 0 && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex items-center space-x-2 mr-2"
+                                >
+                                    <span className="text-sm font-medium px-2 text-emerald-700">
+                                        {selectedTransactionIds.length} dipilih
+                                    </span>
+                                    <button className="p-2 rounded-xl border bg-white border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center space-x-2 transition-all">
+                                        <Printer size={16} />
+                                        <span className="text-sm font-medium hidden sm:inline">Cetak</span>
+                                    </button>
+                                    <button className="p-2 rounded-xl border bg-red-50 border-red-100 text-red-600 hover:bg-red-100 flex items-center space-x-2 transition-all">
+                                        <Trash2 size={16} />
+                                        <span className="text-sm font-medium hidden sm:inline">Hapus</span>
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                             <input 
@@ -213,16 +269,35 @@ export const FinanceManagement = () => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                <th className="px-6 py-4 w-12">
+                                    <input 
+                                        type="checkbox" 
+                                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer"
+                                        checked={TRANSACTIONS.length > 0 && selectedTransactionIds.length === TRANSACTIONS.length}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
                                 <th className="px-6 py-4">Tanggal</th>
                                 <th className="px-6 py-4">Deskripsi</th>
                                 <th className="px-6 py-4">Kategori</th>
                                 <th className="px-6 py-4">Jumlah</th>
-                                <th className="px-6 py-4 text-right">Aksi</th>
+                                {role !== 'Tamu' && <th className="px-6 py-4 text-right">Aksi</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {TRANSACTIONS.map((t) => (
-                                <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
+                                <tr key={t.id} className={cn(
+                                    "transition-colors",
+                                    selectedTransactionIds.includes(t.id) ? "bg-emerald-50/50" : "hover:bg-gray-50/50"
+                                )}>
+                                    <td className="px-6 py-4">
+                                        <input 
+                                            type="checkbox" 
+                                            className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer"
+                                            checked={selectedTransactionIds.includes(t.id)}
+                                            onChange={() => handleSelectTransaction(t.id)}
+                                        />
+                                    </td>
                                     <td className="px-6 py-4 text-sm text-gray-500">{t.date}</td>
                                     <td className="px-6 py-4">
                                         <p className="text-sm font-bold text-gray-800">{t.desc}</p>
@@ -240,11 +315,16 @@ export const FinanceManagement = () => {
                                             {t.type === 'income' ? '+' : '-'} Rp {t.amount}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="text-gray-400 hover:text-gray-600">
-                                            <ArrowRight size={18} />
-                                        </button>
-                                    </td>
+                                    {role !== 'Tamu' && (
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                                onClick={() => handleViewDetail(t)}
+                                                className="p-2 rounded-lg text-gray-400 hover:text-[#064E3B] hover:bg-emerald-50 transition-all"
+                                            >
+                                                <ArrowRight size={18} />
+                                            </button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -254,6 +334,128 @@ export const FinanceManagement = () => {
                     <button className="text-sm font-bold text-[#064E3B] hover:underline">Lihat Semua Transaksi</button>
                 </div>
             </div>
+
+            {/* Transaction Detail Modal */}
+            <AnimatePresence>
+                {isDetailModalOpen && selectedTransaction && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsDetailModalOpen(false)}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                        >
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 sticky top-0 z-10">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+                                        <FileText size={20} className="text-[#064E3B]" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900">Detail Transaksi</h3>
+                                        <p className="text-xs font-mono text-gray-500 mt-0.5">{selectedTransaction.trxId}</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => setIsDetailModalOpen(false)} 
+                                    className="p-2 hover:bg-gray-200 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-8 overflow-y-auto flex-1">
+                                {/* Amount Section */}
+                                <div className="text-center mb-8">
+                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Total Nominal</p>
+                                    <h2 className={cn(
+                                        "text-4xl font-black tracking-tight",
+                                        selectedTransaction.type === 'income' ? "text-emerald-600" : "text-red-600"
+                                    )}>
+                                        {selectedTransaction.type === 'income' ? '+' : '-'} Rp {selectedTransaction.amount}
+                                    </h2>
+                                    <div className="inline-flex items-center space-x-1.5 mt-4 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                                        <CheckCircle2 size={14} className="text-emerald-600" />
+                                        <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Berhasil</span>
+                                    </div>
+                                </div>
+
+                                <div className="h-px w-full bg-dashed border-t border-dashed border-gray-200 mb-8"></div>
+
+                                {/* Details Grid */}
+                                <div className="space-y-5">
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-500 font-medium">Kategori</span>
+                                        <span className="px-3 py-1 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            {selectedTransaction.cat}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-500 font-medium">Deskripsi</span>
+                                        <span className="text-sm font-bold text-gray-900 text-right max-w-[60%]">
+                                            {selectedTransaction.desc}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-500 font-medium">Tanggal & Waktu</span>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-900 block">{selectedTransaction.date}</span>
+                                            <span className="text-xs text-gray-500">{selectedTransaction.time}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-500 font-medium">Metode Pembayaran</span>
+                                        <div className="flex items-center space-x-2">
+                                            <CreditCard size={14} className="text-gray-400" />
+                                            <span className="text-sm font-bold text-gray-900">{selectedTransaction.method}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-500 font-medium">Dicatat Oleh</span>
+                                        <div className="flex items-center space-x-2">
+                                            <User size={14} className="text-gray-400" />
+                                            <span className="text-sm font-bold text-gray-900">{selectedTransaction.cashier}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="h-px w-full bg-dashed border-t border-dashed border-gray-200 my-8"></div>
+
+                                {/* Attachment Placeholder */}
+                                <div>
+                                    <span className="text-sm text-gray-500 font-medium block mb-3">Bukti Transaksi</span>
+                                    <div className="w-full h-24 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-gray-300 transition-colors cursor-pointer">
+                                        <div className="flex flex-col items-center">
+                                            <FileText size={24} className="mb-2" />
+                                            <span className="text-xs font-bold uppercase tracking-widest">Lihat Lampiran</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-6 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-3">
+                                <button className="flex-1 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors shadow-sm">
+                                    <Printer size={18} />
+                                    <span>Cetak Kwitansi</span>
+                                </button>
+                                <button className="flex-1 py-3.5 bg-[#25D366] text-white rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-[#20bd5a] transition-colors shadow-lg shadow-green-500/20">
+                                    <MessageSquare size={18} />
+                                    <span>Kirim via WA</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
